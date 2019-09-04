@@ -38,8 +38,8 @@ export default function Display(props: Props) {
             {content: "瞬く間に彼がなくなったなぜなら僕は晴れを殺したからだもしまだここにいるのなら僕の敵討ちするということです", date: new Date()} as any]
     };
     if (props.clippings.length > 0) {
-        return <List component={"nav"}>
-            {props.clippings.map(c => <Highlight key={c.date.getTime()} clipping={c} showNotes/>)}
+        return <List>
+            {props.clippings.map(c => <Highlight key={c.date.getTime() + c.type} clipping={c} showNotes/>)}
         </List>
     }
 

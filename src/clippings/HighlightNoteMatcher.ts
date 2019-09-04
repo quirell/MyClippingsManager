@@ -38,8 +38,10 @@ export function joinNoteWithHighlightByLocation(clippings: Clipping[]): void {
     const clippingTipsByBook = _.mapValues(byBookWithLocation, clippings => _.sortBy(
         _.flatMap(clippings, c => [new ClippingStart(c), new ClippingEnd(c)]),
         ["value", "sortOrder", "clipping.type"]));
+
     _.forEach(clippingTipsByBook, book => {
         const highlights: Set<Clipping> = new Set();
+
         book.forEach((tip: ClippingTip) => {
             if (tip.clipping.type === Type.highlight) {
                 if (tip instanceof ClippingStart)
