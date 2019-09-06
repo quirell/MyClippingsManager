@@ -52,12 +52,13 @@ const styles = createStyles({
 interface Props extends WithStyles<typeof styles> {
     clipping: Clipping
     showNotes?: boolean;
+    style?: any
 }
 
 function Highlight(props: Props) {
-    const {clipping, showNotes, classes} = props;
+    const {clipping, showNotes, classes, style} = props;
     return (
-        <Card className={classes.card}>
+        <Card className={classes.card} style={style}>
             <CardContent>
                 <div className={classes.header}>
                     <Typography className={classes.typography} variant={"h5"}> <Icon component={"i"}
@@ -96,8 +97,7 @@ function Highlight(props: Props) {
                     </IconButton>
                 </div>
 
-                {/*<Typography variant={"body2"} className={classes.note}>{note.content}</Typography>*/}
-                {showNotes && clipping.notes &&
+                {showNotes && clipping.notes && clipping.notes.length > 0 &&
                 <List className={classes.note} dense>
                     {clipping.notes.map(note =>
                         (<ListItem key={note.date.getTime()}>

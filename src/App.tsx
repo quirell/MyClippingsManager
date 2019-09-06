@@ -24,6 +24,7 @@ const App: React.FC = () => {
         const files: (FileList | null) = ev.target.files;
         if (files == null || files.length === 0)
             return;
+        console.log("starting" + new Date().toISOString());
         console.time("parsing");
         const clippings = await parseClippingsFile(files[0]);
         console.timeEnd("parsing");
@@ -34,17 +35,19 @@ const App: React.FC = () => {
         console.time("authors");
         clippings.forEach(c => c.author && authors.add(c.author));
         console.timeEnd("authors");
-        setAuthors(Array.from(authors));
         const books = new Set<string>();
         console.time("books");
         clippings.forEach(c => c.title && books.add(c.title));
         console.timeEnd("books");
+        console.log("parsing end" + new Date().toISOString());
+        setAuthors(Array.from(authors));
         setBooks(Array.from(books));
         setClippings(clippings);
+        console.log("rendering   end" + new Date().toISOString())
     };
     return (
         <div className="App">
-            <input type="file" onChange={fileAdded} ref={openFilePickerRef} hidden={true}/>
+            <input type="file" onChange={fileAdded} ref={openFilePickerRef} accept={"text/plain"} hidden={true}/>
             <Button variant="contained" onClick={() => openFilePickerRef.current.click()}>
                 Select MyClippings File
             </Button>
