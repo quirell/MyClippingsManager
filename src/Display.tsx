@@ -39,8 +39,12 @@ const longTest: Clipping = {
 
 
 export default function Display(props: Props) {
-    let listRef = React.useRef(null);
+    const listRef:any = React.useRef(null);
+    const scrollerRef = React.useRef(null);
     const cellMeasurerCache = React.useRef(new CellMeasurerCache({defaultHeight: 144.667, fixedWidth: true}));
+    if(listRef.current != null && props.clippings.length != listRef.current.props.rowCount){
+        cellMeasurerCache.current.clearAll();
+    }
     const renderRow: ListRowRenderer = ({index, key, parent, style}) => {
         const c = props.clippings[index];
         return (
@@ -59,7 +63,7 @@ export default function Display(props: Props) {
     };
 
     if (props.clippings.length > 0) {
-        return <WindowScroller>
+        return <WindowScroller ref={scrollerRef}>
             {({height, isScrolling, scrollTop, onChildScroll}) => (
                 <AutoSizer disableHeight>
                     {({width}) => (

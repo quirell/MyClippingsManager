@@ -30,7 +30,6 @@ class ClippingEnd implements ClippingTip {
 }
 
 // It is basically the overlapping intervals algorithm
-// The assumption is that there is not many overlapping highlights and notes
 export function joinNoteWithHighlightByLocation(clippings: Clipping[]): void {
     const byBook = _.groupBy(clippings, c => c.title + c.author);
     //if one clipping in a book has a location then all have it

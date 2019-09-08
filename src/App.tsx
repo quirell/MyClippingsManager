@@ -6,20 +6,16 @@ import {parseClippingsFile} from "./clippings/ClippingsFIleParser";
 import {joinNoteWithHighlightByLocation} from "./clippings/HighlightNoteMatcher";
 import Filter from "./Filter";
 import {Button} from "@material-ui/core";
-import {Filters} from "./filters/filterClippings";
+import {defaultFilters, filterClippings, Filters} from "./filters/filterClippings";
 
 const App: React.FC = () => {
     const openFilePickerRef: any = React.useRef();
+    const clippingsRef = React.useRef<Clipping[]>([]);
     const [clippings, setClippings] = React.useState<Clipping[]>([]);
-    const [filters, setFilters] = React.useState<Filters>({
-        dateTo: null,
-        dateFrom: null,
-        author: [],
-        book: [],
-        content: ""
-    });
+    const [filters, setFilters] = React.useState<Filters>(defaultFilters);
     const [authors, setAuthors] = React.useState<string[]>([]);
     const [books, setBooks] = React.useState<string[]>([]);
+
     const fileAdded = async (ev: ChangeEvent<HTMLInputElement>) => {
         const files: (FileList | null) = ev.target.files;
         if (files == null || files.length === 0)
@@ -27,6 +23,7 @@ const App: React.FC = () => {
         console.log("starting" + new Date().toISOString());
         console.time("parsing");
         const clippings = await parseClippingsFile(files[0]);
+        clippingsRef.current = clippings;
         console.timeEnd("parsing");
         console.time("joining");
         joinNoteWithHighlightByLocation(clippings);
@@ -45,6 +42,11 @@ const App: React.FC = () => {
         setClippings(clippings);
         console.log("rendering   end" + new Date().toISOString())
     };
+
+    const setAndFilter = (filters:Filters) => {
+        setFilters(filters);
+        setClippings(filterClippings(clippingsRef.current,filters));
+    };
     return (
         <div className="App">
             <input type="file" onChange={fileAdded} ref={openFilePickerRef} accept={"text/plain"} hidden={true}/>
@@ -52,7 +54,7 @@ const App: React.FC = () => {
                 Select MyClippings File
             </Button>
             <br/>
-            <Filter filters={filters} setFilters={setFilters} authors={authors} books={books}/>
+            <Filter filters={filters} setFilters={setAndFilter} authors={authors} books={books}/>
             <br/>
             <Display clippings={clippings}/>
         </div>

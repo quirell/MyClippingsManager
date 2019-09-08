@@ -48,13 +48,14 @@ interface Props extends WithStyles<typeof styles> {
     books: string[],
     authors: string[],
     filters: Filters
-    setFilters: Dispatch<SetStateAction<Filters>>
+    setFilters: (filters:Filters) => void
 }
 
 function Filter(props: Props) {
     const {classes, books, authors, filters, setFilters} = props;
     const handleChange = (name: string) => (event: React.ChangeEvent<any>) => {
-        setFilters({...filters, [name]: event.target.value});
+        const value = event.target.type === "checkbox" ? event.target.checked : event.target.value;
+        setFilters({...filters, [name]: value});
     };
     const handleDateChange = (name: string) => (date: MaterialUiPickersDate) => {
         setFilters({...filters, [name]: date});
@@ -63,28 +64,24 @@ function Filter(props: Props) {
         <Card className={classes.card}>
             <Checkbox
                 checked={filters.highlight}
-                value={"highlight"}
                 onChange={handleChange("highlight")}
                 icon={<Icon className={"fas fa-highlighter"}/>}
                 checkedIcon={<Icon className={"fas fa-highlighter"}/>}
             />
             <Checkbox
                 checked={filters.note}
-                value={"note"}
                 onChange={handleChange("note")}
                 icon={<Icon className={"fas fa-sticky-note"}/>}
                 checkedIcon={<Icon className={"fas fa-sticky-note"}/>}
             />
             <Checkbox
                 checked={filters.bookmark}
-                value={"bookmark"}
                 onChange={handleChange("bookmark")}
                 icon={<Icon className={"fas fa-bookmark"}/>}
                 checkedIcon={<Icon className={"fas fa-bookmark"}/>}
             />
             <Checkbox
                 checked={filters.joinedNoteHighlight}
-                value={"joinedNoteHighlight"}
                 onChange={handleChange("joinedNoteHighlight")}
                 icon={<Icon className={"fas fa-layer-group"}/>}
                 checkedIcon={<Icon className={"fas fa-layer-group"}/>}
@@ -95,10 +92,12 @@ function Filter(props: Props) {
                        onChange={handleChange("content")}/>
             <TextField className={classes.numberInput}
                        value={filters.page}
+                       type={"number"}
                        onChange={handleChange("page")}
                        label={<Icon className={"fa fa-file-alt"}/>}/>
             <TextField className={classes.numberInput}
                        value={filters.location}
+                       type={"number"}
                        onChange={handleChange("location")}
                        label={<Icon className={"far fa-dot-circle"}/>}/>
             <FormControl className={classes.multiselect}>
