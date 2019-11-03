@@ -14,14 +14,12 @@ const whitespace_betweenRtTag_htmlTag = /(<rt>.*<\/rt>)|(<[^<]*>)|([\s　]+)/g;
 const utfEncoder = new TextEncoder();
 const utfDecoder = new TextDecoder();
 
-
 function foundByteStartIndex(foundIndex: number, htmlSearchExcerpt: string) {
     let excerptFoundStartIndex = 0;
     let startIndexAfterFoundIndex = 0;
     let match: RegExpExecArray;
-
+    htmlSearchExcerpt += "<guard/>";
     while (startIndexAfterFoundIndex <= foundIndex) {
-        // Token is never null, because condition will be met after the last match in the worst case
         match = whitespace_betweenRtTag_htmlTag.exec(htmlSearchExcerpt)!;
         startIndexAfterFoundIndex += match.index! - excerptFoundStartIndex;
         excerptFoundStartIndex = whitespace_betweenRtTag_htmlTag.lastIndex
@@ -40,7 +38,7 @@ export function findHighlightByteIndex(highlight: Clipping, bookBinary: ArrayBuf
     const SEARCH_RADIUS = 1000;
     const MAX_SEARCH_RADIUS = 3000;
 
-    const locationSize = bookBinary.byteLength / locations;
+    const locationSize = ~~(bookBinary.byteLength / locations);
     const locationStart = highlight.location!.start * locationSize;
     const sanitizedContent = highlight.content.replace(/[\s　]+/g, "");
     let currentRadius = 0;
@@ -80,4 +78,48 @@ async function getBookContent(file: File) {
         responseType: "arraybuffer"
     });
     return axiosResponse.data;
+}
+
+function isFullStop(fullStops: Uint8Array[], view: DataView, current: number): number {
+    const result = fullStops.find(dot =>
+        dot.every((byte, index) =>
+            view.getUint8(current + index) === byte)
+    );
+    return result ? result.length : 0;
+}
+
+interface SurroundingSentences {
+    before: string;
+    after: string;
+}
+
+export function surroundingSentences(highlight: Clipping, clippingStartByte: number, bookBinary: ArrayBuffer, sentences = 1): SurroundingSentences {
+    const view = new DataView(bookBinary);
+
+    const fullStops = [".", "。", "｡"].map(dot => utfEncoder.encode(dot));
+
+    let startDot = clippingStartByte;
+    let sentencesFound = 0;
+    while (sentencesFound < sentences && startDot > 0) {
+        startDot--;
+        if (isFullStop(fullStops, view, startDot))
+            sentencesFound++;
+    }
+    startDot += isFullStop(fullStops, view, startDot);
+    const highlightSize = utfEncoder.encode(highlight.content).length;
+    // -4 (max utf length) accounts for a case when the last character is some kind of full stop
+    let endDot = clippingStartByte + highlightSize - 4;
+    sentencesFound = 0;
+    while (sentencesFound < sentences && endDot < bookBinary.byteLength) {
+        endDot++;
+        if (isFullStop(fullStops, view, endDot))
+            sentencesFound++;
+    }
+
+    return {
+        before: utfDecoder.decode(bookBinary.slice(startDot, clippingStartByte))
+            .replace(whitespace_betweenRtTag_htmlTag, ""),
+        after: utfDecoder.decode(bookBinary.slice(clippingStartByte + highlightSize, endDot))
+            .replace(whitespace_betweenRtTag_htmlTag, "")
+    }
 }

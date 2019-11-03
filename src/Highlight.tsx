@@ -15,7 +15,7 @@ import {
 } from "@material-ui/core";
 import {Clipping} from "./clippings/Clipping";
 import clsx from "clsx";
-import {findHighlightByteIndex, getBookContent1} from "./mobi/LocationMatcher";
+import {findHighlightByteIndex, getBookContent1, surroundingSentences} from "./mobi/LocationMatcher";
 
 const styles = createStyles({
     card: {
@@ -62,7 +62,8 @@ function Highlight(props: Props) {
         <Card className={classes.card} style={style} onClick={async () =>{
             const bookContent = await getBookContent1();
             const pos = await findHighlightByteIndex(clipping,bookContent,2190);
-            console.log(pos)
+            console.log(pos);
+            console.log(surroundingSentences(clipping,pos,bookContent,1));
         }}>
             <CardContent>
                 <div className={classes.header}>
