@@ -15,7 +15,6 @@ import {
 } from "@material-ui/core";
 import {Clipping} from "./clippings/Clipping";
 import clsx from "clsx";
-import {findHighlightByteIndex, getBookContent1, surroundingSentences} from "./mobi/LocationMatcher";
 
 const styles = createStyles({
     card: {
@@ -39,6 +38,9 @@ const styles = createStyles({
         padding: 5,
         color: "rgba(0,0,0,0.54)"
     },
+    surrounding: {
+        color: "rgba(0,0,0,0.54)"
+    },
     content: {
         textAlign: "left",
         marginTop: 10,
@@ -54,17 +56,13 @@ interface Props extends WithStyles<typeof styles> {
     clipping: Clipping
     showNotes?: boolean;
     style?: any
+    showSurroundingContent?: boolean
 }
 
 function Highlight(props: Props) {
-    const {clipping, showNotes, classes, style} = props;
+    const {clipping, showNotes, classes, style, showSurroundingContent} = props;
     return (
-        <Card className={classes.card} style={style} onClick={async () =>{
-            const bookContent = await getBookContent1();
-            const pos = await findHighlightByteIndex(clipping,bookContent,2190);
-            console.log(pos);
-            console.log(surroundingSentences(clipping,pos,bookContent,1));
-        }}>
+        <Card className={classes.card} style={style}>
             <CardContent>
                 <div className={classes.header}>
                     <Typography className={classes.typography} variant={"h5"}> <Icon component={"i"}
@@ -97,7 +95,13 @@ function Highlight(props: Props) {
                     </Typography>}
                 </div>
                 <div className={classes.header}>
-                    <Typography variant={"body1"} className={classes.content}>{clipping.content}</Typography>
+                    <Typography variant={"body1"} className={classes.content}>
+                        {showSurroundingContent && clipping.surrounding &&
+                        <span className={classes.surrounding}>{clipping.surrounding.before}</span>}
+                        {clipping.content}
+                        {showSurroundingContent && clipping.surrounding &&
+                        <span className={classes.surrounding}>{clipping.surrounding.after}</span>}
+                    </Typography>
                     <IconButton edge={"end"} size={"small"}>
                         <Icon className={"fas fa-trash-alt"}/>
                     </IconButton>

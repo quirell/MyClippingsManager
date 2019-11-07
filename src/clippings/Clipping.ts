@@ -1,3 +1,5 @@
+import {SurroundingContent} from "../mobi/LocationMatcher";
+
 export enum Type {
     note,
     highlight,
@@ -19,6 +21,13 @@ export interface Metadata {
 export interface Clipping extends Metadata {
     title: string,
     author?: string,
-    content: string
-    notes?: Clipping[]
+    content: string,
+    notes?: Clipping[],
+    surrounding?: SurroundingContent
+}
+
+export interface Book {
+    title: string,
+    locations?: number,
+    bytes?: ArrayBuffer
 }

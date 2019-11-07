@@ -1,22 +1,24 @@
-import {Clipping, Type} from "../clippings/Clipping";
+import {Book, Clipping, Type} from "../clippings/Clipping";
 import {isAfter, isBefore} from "date-fns";
 
 export interface Filters {
     note: boolean
     bookmark: boolean
     highlight: boolean
-    joinedNoteHighlight: boolean
+    joinedNoteHighlight: boolean,
+    showSurrounding: boolean,
     dateFrom: Date | null
     dateTo: Date | null
     content: string
     location: number | ""
     page: number | ""
     author: string[]
-    book: string[]
+    book: Book[]
 }
 
 class Filter{
-    constructor(public active:(filters:Filters) => boolean,public execute:(clippping:Clipping,filters:Filters) => boolean){}
+    constructor(public active: (filters: Filters) => boolean, public execute: (clipping: Clipping, filters: Filters) => boolean) {
+    }
 }
 
 const filterList = [
@@ -25,6 +27,7 @@ const filterList = [
         f.note && c.type === Type.note ||
         f.bookmark && c.type === Type.bookmark),
     new Filter(f => f.joinedNoteHighlight,c => c.notes !== undefined && c.notes.length > 0),
+    new Filter(f => f.showSurrounding, _ => true),
     new Filter(f => f.dateFrom != null,(c,f) => isAfter(c.date,f.dateFrom!)),
     new Filter(f => f.dateTo != null,(c,f) => isBefore(c.date,f.dateTo!)),
     new Filter(f => f.page !== "",(c,f) =>
@@ -32,7 +35,7 @@ const filterList = [
     new Filter(f => f.location !== "",(c,f) =>
         c.location !== undefined && c.location.start <= f.location && f.location <= c.location.end),
     new Filter(f => f.author.length > 0,(c,f) => f.author.includes(c.author!)),
-    new Filter(f => f.book.length > 0,(c,f) => f.book.includes(c.title)),
+    new Filter(f => f.book.length > 0, (c, f) => f.book.find(b => b.title === c.title) as any as boolean),
     new Filter(f => f.content !== "",(c,f) => c.content.includes(f.content))
 ];
 
@@ -46,6 +49,7 @@ export const defaultFilters:Filters = {
     note: true,
     bookmark: true,
     joinedNoteHighlight: false,
+    showSurrounding: false,
     page: "",
     location: ""
 };

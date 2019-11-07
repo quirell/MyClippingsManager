@@ -6,6 +6,8 @@ import {AutoSizer, CellMeasurer, CellMeasurerCache, List, ListRowRenderer, Windo
 
 interface Props {
     clippings: Clipping[];
+    showNotes: boolean;
+    showSurroundingContent: boolean;
 }
 
 const test: Clipping = {
@@ -16,7 +18,8 @@ const test: Clipping = {
     "type": 1,
     location: {start: 12, end: 123},
     page: {start: 1, end: 123},
-    notes: [{content: "ASdASDASDASD", date: new Date()} as any]
+    notes: [{content: "ASdASDASDASD", date: new Date()} as any],
+    surrounding: {before: "asas sad asd as sad sad ", after: "adsa sa dsa asd sad ad s "}
 };
 const longTest: Clipping = {
     "title": "I am fffffff long text I am ffffff long text I am ffffffffff long text",
@@ -42,7 +45,7 @@ export default function Display(props: Props) {
     const listRef:any = React.useRef(null);
     const scrollerRef = React.useRef(null);
     const cellMeasurerCache = React.useRef(new CellMeasurerCache({defaultHeight: 144.667, fixedWidth: true}));
-    if(listRef.current != null && props.clippings.length != listRef.current.props.rowCount){
+    if (listRef.current != null && props.clippings.length !== listRef.current.props.rowCount) {
         cellMeasurerCache.current.clearAll();
     }
     const renderRow: ListRowRenderer = ({index, key, parent, style}) => {
@@ -56,7 +59,8 @@ export default function Display(props: Props) {
                 parent={parent}
             >
                 <div style={style} key={key}>
-                    <Highlight clipping={c} showNotes/>
+                    <Highlight clipping={c} showNotes={props.showNotes}
+                               showSurroundingContent={props.showSurroundingContent}/>
                 </div>
             </CellMeasurer>
         )
@@ -86,7 +90,8 @@ export default function Display(props: Props) {
             )}
         </WindowScroller>
     }
-    return <div><Highlight clipping={test} showNotes/><Highlight clipping={longTest} showNotes/></div>;
+    return <div><Highlight clipping={test} showNotes showSurroundingContent/><Highlight clipping={longTest} showNotes/>
+    </div>;
 }
 
 

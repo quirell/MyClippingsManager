@@ -64,7 +64,7 @@ export class ClippingParser {
     }
 
     private static parseTitleLine(titleLine: string): { title: string, author?: string } {
-        const titleAuthor = /(.*)\((.*)\)/;
+        const titleAuthor = /(.*) \((.*)\)/;
         const match = titleLine.match(titleAuthor);
         if (!match) return {title: titleLine};
         return {title: match[1], author: match[2]};

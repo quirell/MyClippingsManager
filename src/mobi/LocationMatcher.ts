@@ -1,4 +1,4 @@
-import {Clipping} from "../clippings/Clipping";
+import {Book, Clipping} from "../clippings/Clipping";
 import axios from "axios"
 
 function firstValidUtf8ByteAfter(pos: number, buffer: ArrayBuffer) {
@@ -88,12 +88,12 @@ function isFullStop(fullStops: Uint8Array[], view: DataView, current: number): n
     return result ? result.length : 0;
 }
 
-interface SurroundingSentences {
+export interface SurroundingContent {
     before: string;
     after: string;
 }
 
-export function surroundingSentences(highlight: Clipping, clippingStartByte: number, bookBinary: ArrayBuffer, sentences = 1): SurroundingSentences {
+export function surroundingSentences(highlight: Clipping, clippingStartByte: number, bookBinary: ArrayBuffer, sentences = 1): SurroundingContent {
     const view = new DataView(bookBinary);
 
     const fullStops = [".", "。", "｡"].map(dot => utfEncoder.encode(dot));
@@ -122,4 +122,14 @@ export function surroundingSentences(highlight: Clipping, clippingStartByte: num
         after: utfDecoder.decode(bookBinary.slice(clippingStartByte + highlightSize, endDot))
             .replace(whitespace_betweenRtTag_htmlTag, "")
     }
+}
+
+export function setHighlightsSurroundings(highlights: Clipping[], book: Book, sentences: number = 1) {
+    if (!book.locations || !book.bytes)
+        throw Error("book must have locations and bytes");
+    highlights.forEach(highlight => {
+        const startByte = findHighlightByteIndex(highlight, book.bytes!, book.locations!);
+        if (startByte >= 0)
+            highlight.surrounding = surroundingSentences(highlight, startByte, book.bytes!, sentences);
+    })
 }

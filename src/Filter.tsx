@@ -1,5 +1,4 @@
 import {
-    Button,
     Card,
     Checkbox,
     createStyles,
@@ -12,11 +11,11 @@ import {
     WithStyles,
     withStyles
 } from "@material-ui/core";
-import React, {Dispatch, SetStateAction} from "react";
+import React from "react";
 import DateFnsUtils from "@date-io/date-fns";
 import {DatePicker, MaterialUiPickersDate, MuiPickersUtilsProvider} from "@material-ui/pickers";
 import {Filters} from "./filters/filterClippings";
-import {getBookContent1} from "./mobi/LocationMatcher";
+import {Book} from "./clippings/Clipping";
 
 const styles = createStyles({
     card: {
@@ -47,7 +46,7 @@ const styles = createStyles({
 });
 
 interface Props extends WithStyles<typeof styles> {
-    books: string[],
+    books: Book[],
     authors: string[],
     filters: Filters
     setFilters: (filters:Filters) => void
@@ -88,6 +87,12 @@ function Filter(props: Props) {
                 icon={<Icon className={"fas fa-layer-group"}/>}
                 checkedIcon={<Icon className={"fas fa-layer-group"}/>}
             />
+            <Checkbox
+                checked={filters.showSurrounding}
+                onChange={handleChange("showSurrounding")}
+                icon={<Icon className={"fas fa-arrows-alt-h"}/>}
+                checkedIcon={<Icon className={"fas fa-layer-group"}/>}
+            />
             <TextField className={classes.textField}
                        label={<Icon className={"fas fa-align-justify"}/>}
                        value={filters.content}
@@ -107,7 +112,7 @@ function Filter(props: Props) {
                 <Select multiple
                         value={filters.book}
                         onChange={handleChange("book")}>
-                    {books.map(book => <MenuItem key={book} value={book}>{book}</MenuItem>)}
+                    {books.map(book => <MenuItem key={book.title} value={book as any}>{book.title}</MenuItem>)}
                 </Select>
             </FormControl>
             <FormControl className={classes.multiselect}>
