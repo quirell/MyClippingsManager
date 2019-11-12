@@ -91,7 +91,7 @@ function Filter(props: Props) {
                 checked={filters.showSurrounding}
                 onChange={handleChange("showSurrounding")}
                 icon={<Icon className={"fas fa-arrows-alt-h"}/>}
-                checkedIcon={<Icon className={"fas fa-layer-group"}/>}
+                checkedIcon={<Icon className={"fas fa-arrows-alt-h"}/>}
             />
             <TextField className={classes.textField}
                        label={<Icon className={"fas fa-align-justify"}/>}

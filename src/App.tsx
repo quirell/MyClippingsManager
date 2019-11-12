@@ -38,10 +38,16 @@ const App: React.FC = () => {
         clippings.forEach(c => c.title && titles.add(c.title));
         const books: Book[] = Array.from(titles).map(title => ({title: title}));
         const kitchen = await getBookContent1();
-        const kitchenBook = books.find(b => b.title === "キッチン")!;
+        // const kitchenBook = books.find(b => b.title === "The Way of Kings")!;
+        // const kitchenBook = books.find(b => b.title === "キッチン")!;
+        const kitchenBook = books.find(b => b.title === "Trinitasシリーズ ドリーム・ライフ～夢の異世界生活～")!;
+        kitchenBook.locations = 18213;
         kitchenBook.locations = 2190;
+        kitchenBook.locations = 3451;
         kitchenBook.bytes = kitchen;
-        setHighlightsSurroundings(clippings.filter(c => c.title == "キッチン" && c.type == Type.highlight), kitchenBook);
+        // setHighlightsSurroundings(clippings.filter(c => c.title == "The Way of Kings" && c.type == Type.highlight), kitchenBook);
+        // setHighlightsSurroundings(clippings.filter(c => c.title == "キッチン" && c.type == Type.highlight), kitchenBook);
+        setHighlightsSurroundings(clippings.filter(c => c.title == "Trinitasシリーズ ドリーム・ライフ～夢の異世界生活～" && c.type == Type.highlight), kitchenBook);
         console.timeEnd("books");
         console.log("parsing end" + new Date().toISOString());
         setAuthors(Array.from(authors));
