@@ -1,6 +1,7 @@
 import {Book, Clipping} from "../clippings/Clipping";
 import axios from "axios"
 import _ from "lodash"
+
 function firstValidUtf8ByteAfter(pos: number, buffer: ArrayBuffer) {
     const utf8intermediateByteMask = 0b11000000;
     const utf8intermediateByteMarker = 0b10000000;
@@ -14,12 +15,12 @@ const whitespace_betweenRtTag_htmlTag = /(<rt>.*?<\/rt>)|(<[^<]*>)|([\s　]+)/g;
 const betweenRtTag_htmlTag = /(<rt>.*?<\/rt>)|(<[^<]*>)/g;
 const utfEncoder = new TextEncoder();
 const utfDecoder = new TextDecoder();
-// TODO make it return start and end index
+
 function foundByteStartIndex(foundIndex: number, htmlSearchExcerpt: string) {
     let excerptFoundStartIndex = 0;
     let startIndexAfterFoundIndex = 0;
     let match: RegExpExecArray;
-    htmlSearchExcerpt += "<guard/>";
+    htmlSearchExcerpt += " <guard/>";
     whitespace_betweenRtTag_htmlTag.lastIndex = 0;
     while (startIndexAfterFoundIndex <= foundIndex) {
         match = whitespace_betweenRtTag_htmlTag.exec(htmlSearchExcerpt)!;
@@ -39,12 +40,18 @@ interface HighlightBytePosition {
     index:number;
     length:number;
 }
-export function findHighlightByteIndex(highlight: Clipping, bookBinary: ArrayBuffer, locations: number) : HighlightBytePosition | null {
+var delta = 0;
+
+// Books discrepancies tend to grow as we're processing highlights in later positions, and delta helps minimizing that difference
+function updateLocationDelta(excerptStartByte:number,foundStartByte:number, locationStartByte: number){
+    delta += excerptStartByte + foundStartByte - locationStartByte;
+}
+function findHighlightByteIndex(highlight: Clipping, bookBinary: ArrayBuffer, locations: number) : HighlightBytePosition | null {
     const SEARCH_RADIUS = 1000;
-    const MAX_SEARCH_RADIUS = 5000;
+    const MAX_SEARCH_RADIUS = 10000;
 
     const locationSize = ~~(bookBinary.byteLength / locations);
-    const locationStart = highlight.location!.start * locationSize;
+    const locationStart = highlight.location!.start * locationSize + delta;
     const sanitizedContent = highlight.content.replace(/[\s　]+/g, "");
     let currentRadius = 0;
     let foundIndex = -1;
@@ -68,28 +75,13 @@ export function findHighlightByteIndex(highlight: Clipping, bookBinary: ArrayBuf
     if (foundIndex > -1) {
         const index = foundByteStartIndex(foundIndex, htmlSearchExcerpt);
         console.log(`start: ${locationStart} found: ${searchExcerptByteStart +  index} delta: ${searchExcerptByteStart +  index - locationStart} radius: ${currentRadius}\n${highlight.content}`);
+        updateLocationDelta(searchExcerptByteStart,index,locationStart);
         return {
             index : searchExcerptByteStart + index,
             length : foundByteStartIndex(foundIndex+sanitizedContent.length, htmlSearchExcerpt) - index
         }
     }
     return null;
-}
-
-export async function getBookContent1() {
-    const axiosResponse = await axios.get<ArrayBuffer>('tri.html', {
-        responseType: "arraybuffer"
-    });
-    return axiosResponse.data;
-}
-
-async function getBookContent(file: File) {
-    const formData = new FormData();
-    formData.append("file", file);
-    const axiosResponse = await axios.post<string>('bookcontent', formData, {
-        responseType: "arraybuffer"
-    });
-    return axiosResponse.data;
 }
 
 function isFullStop(fullStops: Uint8Array[], view: DataView, current: number): number {
@@ -100,12 +92,9 @@ function isFullStop(fullStops: Uint8Array[], view: DataView, current: number): n
     return result ? result.length : 0;
 }
 
-export interface SurroundingContent {
-    before: string;
-    after: string;
-}
 
-export function surroundingSentences(highlight: Clipping, highlightPosition: HighlightBytePosition, bookBinary: ArrayBuffer, sentences = 1): SurroundingContent {
+function surroundingSentences(highlight: Clipping, highlightPosition: HighlightBytePosition, bookBinary: ArrayBuffer, sentences = 1): SurroundingContent {
+    // TODO this doesn't take into account dots that can be inside html tags, exclude them.
     const view = new DataView(bookBinary);
 
     const fullStops = [".", "。", "｡"].map(dot => utfEncoder.encode(dot));
@@ -129,18 +118,42 @@ export function surroundingSentences(highlight: Clipping, highlightPosition: Hig
 
     return {
         before: utfDecoder.decode(bookBinary.slice(startDot, highlightPosition.index))
-            .replace(betweenRtTag_htmlTag, ""),
+            .replace(betweenRtTag_htmlTag, "").trim(),
         after: utfDecoder.decode(bookBinary.slice(highlightPosition.index+highlightPosition.length, endDot))
-            .replace(betweenRtTag_htmlTag, "")
+            .replace(betweenRtTag_htmlTag, "").trim()
     }
 }
 
 export function setHighlightsSurroundings(highlights: Clipping[], book: Book, sentences: number = 1) {
     if (!book.locations || !book.bytes)
         throw Error("book must have locations and bytes");
-    highlights.forEach(highlight => {
+    _.sortBy(highlights,["location.start"]).forEach(highlight => {
         const bytePosition = findHighlightByteIndex(highlight, book.bytes!, book.locations!);
         if (bytePosition != null)
             highlight.surrounding = surroundingSentences(highlight, bytePosition, book.bytes!, sentences);
     })
+}
+
+
+export interface SurroundingContent {
+    before: string;
+    after: string;
+}
+
+
+
+export async function getBookContent1() {
+    const axiosResponse = await axios.get<ArrayBuffer>('wok.html', {
+        responseType: "arraybuffer"
+    });
+    return axiosResponse.data;
+}
+
+async function getBookContent(file: File) {
+    const formData = new FormData();
+    formData.append("file", file);
+    const axiosResponse = await axios.post<string>('bookcontent', formData, {
+        responseType: "arraybuffer"
+    });
+    return axiosResponse.data;
 }

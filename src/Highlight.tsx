@@ -95,7 +95,7 @@ function Highlight(props: Props) {
                     </Typography>}
                 </div>
                 <div className={classes.header}>
-                    <Typography variant={"body1"} className={classes.content}>
+                    <Typography variant={"body2"} className={classes.content}>
                         {showSurroundingContent && clipping.surrounding &&
                         <span className={classes.surrounding}>{clipping.surrounding.before}</span>}
                         {clipping.content}
