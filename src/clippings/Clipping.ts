@@ -1,4 +1,4 @@
-import {SurroundingContent} from "../mobi/LocationMatcher";
+import {SurroundingContent} from "../mobi/HighlightLocationMatcher";
 
 export enum Type {
     note,

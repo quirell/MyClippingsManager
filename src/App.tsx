@@ -7,7 +7,7 @@ import {joinNoteWithHighlightByLocation} from "./clippings/HighlightNoteMatcher"
 import Filter from "./Filter";
 import {Button} from "@material-ui/core";
 import {defaultFilters, filterClippings, Filters} from "./filters/filterClippings";
-import {getBookContent1, setHighlightsSurroundings} from "./mobi/LocationMatcher";
+import {getBookContent1, HighlightLocationMatcher} from "./mobi/HighlightLocationMatcher";
 
 const App: React.FC = () => {
     const openFilePickerRef: any = React.useRef();
@@ -45,7 +45,8 @@ const App: React.FC = () => {
         // kitchenBook.locations = 2190;
         // kitchenBook.locations = 3451;
         kitchenBook.bytes = kitchen;
-        setHighlightsSurroundings(clippings.filter(c => c.title === "The Way of Kings" && c.type === Type.highlight), kitchenBook);
+        const locationMatcher = new HighlightLocationMatcher(kitchenBook);
+        locationMatcher.setSurroundings(clippings.filter(c => c.title === "The Way of Kings" && c.type === Type.highlight));
         // setHighlightsSurroundings(clippings.filter(c => c.title == "キッチン" && c.type == Type.highlight), kitchenBook);
         // setHighlightsSurroundings(clippings.filter(c => c.title == "Trinitasシリーズ ドリーム・ライフ～夢の異世界生活～" && c.type == Type.highlight), kitchenBook);
         console.timeEnd("books");
