@@ -1,5 +1,6 @@
 # Kindle Clippings Manager
 
+![State of the project as of November 2019](myclippingsmanager.png)
 ## Goals of this project
 Main goal is to be able to export clippings
 in a format friendly for reviewing foreign languages words on Kindle.
@@ -20,7 +21,7 @@ using only MyClippings.txt file
 - Parse MyClippings.txt in multiple languages
 - Group Highlights and Notes whose locations overlap
  and show them as one like amazon clippings viewer does
-- Show clippings in book context as kindle device shows them
+- Show highlights and sentences surrounding it as kindle device shows them
 - Export clippings in kindle friendly format
-- If highlight is a single word in or expression,
+- If highlight is a single word or expression,
  display it's translation 
