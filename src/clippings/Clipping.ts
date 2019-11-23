@@ -23,7 +23,7 @@ export interface Clipping extends Metadata {
     author?: string,
     content: string,
     notes?: Clipping[],
-    surrounding?: SurroundingContent
+    surrounding?: SurroundingContent[]
 }
 
 export interface Book {

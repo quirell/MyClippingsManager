@@ -3,7 +3,7 @@ import axios from "axios"
 import _ from "lodash"
 
 
-export class HighlightLocationMatcher{
+export class HighlightLocationMatcher {
 
     private readonly whitespace_betweenRtTag_htmlTag = /(<rt>.*?<\/rt>)|(<[^<]*>)|([\s　]+)/g;
     private readonly betweenRtTag_htmlTag = /(<rt>.*?<\/rt>)|(<[^<]*>)/g;
@@ -16,11 +16,11 @@ export class HighlightLocationMatcher{
     // Found locations tend to grow farther from the location center as we're processing highlights and delta helps minimizing that difference
     private delta = 0;
 
-    private readonly book : Required<Book>;
+    private readonly book: Required<Book>;
     private readonly bookDataView: DataView;
     private readonly locationSize: number;
 
-    constructor(book: Book){
+    constructor(book: Book) {
         if (!book.locations || !book.bytes)
             throw Error("book must have locations and bytes");
         this.book = book as Required<Book>;
@@ -37,7 +37,7 @@ export class HighlightLocationMatcher{
         return pos;
     }
 
-    private  foundByteStartIndex(foundIndex: number, htmlSearchExcerpt: string) {
+    private foundByteStartIndex(foundIndex: number, htmlSearchExcerpt: string) {
         let excerptFoundStartIndex = 0;
         let startIndexAfterFoundIndex = 0;
         let match: RegExpExecArray;
@@ -59,10 +59,11 @@ export class HighlightLocationMatcher{
         return this.utfEncoder.encode(htmlSearchExcerpt.slice(0, excerptFoundStartIndex)).length;
     }
 
-    private  updateLocationDelta(excerptStartByte:number,foundStartByte:number, locationStartByte: number){
+    private updateLocationDelta(excerptStartByte: number, foundStartByte: number, locationStartByte: number) {
         this.delta += excerptStartByte + foundStartByte - locationStartByte;
     }
-    private findHighlightByteIndex(highlight: Clipping) : HighlightBytePosition | null {
+
+    private findHighlightByteIndex(highlight: Clipping): HighlightBytePosition | null {
         const sanitizedContent = highlight.content.replace(/[\s　]+/g, "");
         let htmlSearchExcerpt: string;
 
@@ -74,10 +75,10 @@ export class HighlightLocationMatcher{
             currentRadius += this.SEARCH_RADIUS;
 
             searchExcerptByteStart = this.firstValidUtf8ByteAfter(
-                _.max([locationStart - currentRadius,0])!, this.book.bytes);
+                _.max([locationStart - currentRadius, 0])!, this.book.bytes);
             // max byte length of utf8 is 4
             const searchExcerptByteEnd = this.firstValidUtf8ByteAfter(
-                _.min([locationStart + currentRadius,this.book.bytes.byteLength])! - 4, this.book.bytes);
+                _.min([locationStart + currentRadius, this.book.bytes.byteLength])! - 4, this.book.bytes);
 
             const searchExcerptBinary = this.book.bytes.slice(searchExcerptByteStart, searchExcerptByteEnd);
 
@@ -89,11 +90,11 @@ export class HighlightLocationMatcher{
 
         if (foundIndex > -1) {
             const index = this.foundByteStartIndex(foundIndex, htmlSearchExcerpt);
-            console.log(`start: ${locationStart} found: ${searchExcerptByteStart +  index} delta: ${searchExcerptByteStart +  index - locationStart} radius: ${currentRadius}\n${highlight.content}`);
-            this.updateLocationDelta(searchExcerptByteStart,index,locationStart);
+            console.log(`start: ${locationStart} found: ${searchExcerptByteStart + index} delta: ${searchExcerptByteStart + index - locationStart} radius: ${currentRadius}\n${highlight.content}`);
+            this.updateLocationDelta(searchExcerptByteStart, index, locationStart);
             return {
-                index : searchExcerptByteStart + index,
-                length : this.foundByteStartIndex(foundIndex+sanitizedContent.length, htmlSearchExcerpt) - index
+                index: searchExcerptByteStart + index,
+                length: this.foundByteStartIndex(foundIndex + sanitizedContent.length, htmlSearchExcerpt) - index
             }
         }
         return null;
@@ -119,7 +120,7 @@ export class HighlightLocationMatcher{
         }
         startDot += this.isFullStop(startDot);
         // -4 (max utf length) accounts for a case when the last character is some kind of full stop
-        let endDot = highlightPosition.index+highlightPosition.length - 4;
+        let endDot = highlightPosition.index + highlightPosition.length - 4;
         sentencesFound = 0;
         while (sentencesFound < sentences && endDot < this.book.bytes.byteLength) {
             endDot++;
@@ -130,24 +131,26 @@ export class HighlightLocationMatcher{
         return {
             before: this.utfDecoder.decode(this.book.bytes.slice(startDot, highlightPosition.index))
                 .replace(this.betweenRtTag_htmlTag, "").trim(),
-            after: this.utfDecoder.decode(this.book.bytes.slice(highlightPosition.index+highlightPosition.length, endDot))
+            after: this.utfDecoder.decode(this.book.bytes.slice(highlightPosition.index + highlightPosition.length, endDot))
                 .replace(this.betweenRtTag_htmlTag, "").trim()
         }
     }
 
-    setSurroundings(highlights: Clipping[], sentences: number = 1) {
-        _.sortBy(highlights,["location.start"]).forEach(highlight => {
+    setSurroundings(highlights: Clipping[], sentencesNumber: number = 1) {
+        _.sortBy(highlights, ["location.start"]).forEach(highlight => {
             const bytePosition = this.findHighlightByteIndex(highlight);
-            if (bytePosition != null)
-                highlight.surrounding = this.surroundingSentences(bytePosition, sentences);
+            if (bytePosition != null) {
+                highlight.surrounding = highlight.surrounding || [];
+                highlight.surrounding[sentencesNumber] = this.surroundingSentences(bytePosition, sentencesNumber);
+            }
         })
     }
 
 }
 
 interface HighlightBytePosition {
-    index:number;
-    length:number;
+    index: number;
+    length: number;
 }
 
 export interface SurroundingContent {
@@ -156,9 +159,8 @@ export interface SurroundingContent {
 }
 
 
-
 export async function getBookContent1() {
-    const axiosResponse = await axios.get<ArrayBuffer>('wok.html', {
+    const axiosResponse = await axios.get<ArrayBuffer>('test.html', {
         responseType: "arraybuffer"
     });
     return axiosResponse.data;

@@ -4,16 +4,18 @@ import Display from "./Display";
 import {Book, Clipping, Type} from "./clippings/Clipping";
 import {parseClippingsFile} from "./clippings/ClippingsFIleParser";
 import {joinNoteWithHighlightByLocation} from "./clippings/HighlightNoteMatcher";
-import Filter from "./Filter";
 import {Button} from "@material-ui/core";
 import {defaultFilters, filterClippings, Filters} from "./filters/filterClippings";
 import {getBookContent1, HighlightLocationMatcher} from "./mobi/HighlightLocationMatcher";
+import {defaultDisplayOptions, DisplayOptions} from "./DisplayOptions";
+import Header from "./Header";
 
 const App: React.FC = () => {
     const openFilePickerRef: any = React.useRef();
     const clippingsRef = React.useRef<Clipping[]>([]);
     const [clippings, setClippings] = React.useState<Clipping[]>([]);
     const [filters, setFilters] = React.useState<Filters>(defaultFilters);
+    const [displayOptions, setDisplayOptions] = React.useState<DisplayOptions>(defaultDisplayOptions);
     const [authors, setAuthors] = React.useState<string[]>([]);
     const [books, setBooks] = React.useState<Book[]>([]);
 
@@ -38,16 +40,16 @@ const App: React.FC = () => {
         clippings.forEach(c => c.title && titles.add(c.title));
         const books: Book[] = Array.from(titles).map(title => ({title: title}));
         const kitchen = await getBookContent1();
-        const kitchenBook = books.find(b => b.title === "The Way of Kings")!;
-        // const kitchenBook = books.find(b => b.title === "キッチン")!;
+        // const kitchenBook = books.find(b => b.title === "The Way of Kings")!;
+        const kitchenBook = books.find(b => b.title === "キッチン")!;
         // const kitchenBook = books.find(b => b.title === "Trinitasシリーズ ドリーム・ライフ～夢の異世界生活～")!;
-        kitchenBook.locations = 18213;
-        // kitchenBook.locations = 2190;
+        // kitchenBook.locations = 18213;
+        kitchenBook.locations = 2190;
         // kitchenBook.locations = 3451;
         kitchenBook.bytes = kitchen;
         const locationMatcher = new HighlightLocationMatcher(kitchenBook);
-        locationMatcher.setSurroundings(clippings.filter(c => c.title === "The Way of Kings" && c.type === Type.highlight));
-        // setHighlightsSurroundings(clippings.filter(c => c.title == "キッチン" && c.type == Type.highlight), kitchenBook);
+        // locationMatcher.setSurroundings(clippings.filter(c => c.title === "The Way of Kings" && c.type === Type.highlight));
+        locationMatcher.setSurroundings(clippings.filter(c => c.title == "キッチン" && c.type == Type.highlight));
         // setHighlightsSurroundings(clippings.filter(c => c.title == "Trinitasシリーズ ドリーム・ライフ～夢の異世界生活～" && c.type == Type.highlight), kitchenBook);
         console.timeEnd("books");
         console.log("parsing end" + new Date().toISOString());
@@ -57,9 +59,9 @@ const App: React.FC = () => {
         console.log("rendering   end" + new Date().toISOString());
     };
 
-    const setAndFilter = (filters:Filters) => {
+    const setAndFilter = (filters: Filters) => {
         setFilters(filters);
-        setClippings(filterClippings(clippingsRef.current,filters));
+        setClippings(filterClippings(clippingsRef.current, filters));
     };
     return (
         <div className="App">
@@ -68,10 +70,10 @@ const App: React.FC = () => {
                 Select MyClippings File
             </Button>
             <br/>
-            <Filter filters={filters} setFilters={setAndFilter} authors={authors} books={books}/>
+            <Header filters={filters} setFilters={setAndFilter} authors={authors} books={books}
+                    displayOptions={displayOptions} setDisplayOptions={setDisplayOptions}/>
             <br/>
-            <Display clippings={clippings} showNotes={filters.joinedNoteHighlight}
-                     showSurroundingContent={filters.showSurrounding}/>
+            <Display clippings={clippings} displayOptions={displayOptions}/>
         </div>
     );
 }

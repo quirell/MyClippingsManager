@@ -15,6 +15,7 @@ import {
 } from "@material-ui/core";
 import {Clipping} from "./clippings/Clipping";
 import clsx from "clsx";
+import {DisplayOptions} from "./DisplayOptions";
 
 const styles = createStyles({
     card: {
@@ -54,13 +55,12 @@ const styles = createStyles({
 
 interface Props extends WithStyles<typeof styles> {
     clipping: Clipping
-    showNotes?: boolean;
     style?: any
-    showSurroundingContent?: boolean
+    displayOptions: DisplayOptions
 }
 
 function Highlight(props: Props) {
-    const {clipping, showNotes, classes, style, showSurroundingContent} = props;
+    const {clipping, classes, style, displayOptions} = props;
     return (
         <Card className={classes.card} style={style}>
             <CardContent>
@@ -96,18 +96,23 @@ function Highlight(props: Props) {
                 </div>
                 <div className={classes.header}>
                     <Typography variant={"body2"} className={classes.content}>
-                        {showSurroundingContent && clipping.surrounding &&
-                        <span className={classes.surrounding}>{clipping.surrounding.before}</span>}
+                        {displayOptions.surrounding.show && clipping.surrounding &&
+                        <span className={classes.surrounding}>
+                            {clipping.surrounding[displayOptions.surrounding.sentencesNumber].before}
+                        </span>}
                         {clipping.content}
-                        {showSurroundingContent && clipping.surrounding &&
-                        <span className={classes.surrounding}>{clipping.surrounding.after}</span>}
+                        {displayOptions.surrounding.show && clipping.surrounding &&
+                        <span className={classes.surrounding}>
+                            {clipping.surrounding[displayOptions.surrounding.sentencesNumber].after}
+                        </span>}
                     </Typography>
                     <IconButton edge={"end"} size={"small"}>
                         <Icon className={"fas fa-trash-alt"}/>
                     </IconButton>
                 </div>
 
-                {showNotes && clipping.notes && clipping.notes.length > 0 &&
+                {displayOptions.showNotesWithHighlightsTogether &&
+                clipping.notes && clipping.notes.length > 0 &&
                 <List className={classes.note} dense>
                     {clipping.notes.map(note =>
                         (<ListItem key={note.date.getTime()}>
@@ -120,7 +125,6 @@ function Highlight(props: Props) {
                         </ListItem>))}
                 </List>}
             </CardContent>
-
         </Card>
     )
 }

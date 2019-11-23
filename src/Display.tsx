@@ -3,11 +3,11 @@ import "react-table/react-table.css";
 import Highlight from "./Highlight";
 import {Clipping} from "./clippings/Clipping";
 import {AutoSizer, CellMeasurer, CellMeasurerCache, List, ListRowRenderer, WindowScroller} from "react-virtualized";
+import {DisplayOptions} from "./DisplayOptions";
 
 interface Props {
     clippings: Clipping[];
-    showNotes: boolean;
-    showSurroundingContent: boolean;
+    displayOptions: DisplayOptions;
 }
 
 const test: Clipping = {
@@ -19,7 +19,8 @@ const test: Clipping = {
     location: {start: 12, end: 123},
     page: {start: 1, end: 123},
     notes: [{content: "ASdASDASDASD", date: new Date()} as any],
-    surrounding: {before: "asas sad asd as sad sad ", after: "adsa sa dsa asd sad ad s "}
+    // @ts-ignore
+    surrounding: [null, {before: "asas sad asd as sad sad ", after: "adsa sa dsa asd sad ad s "}]
 };
 const longTest: Clipping = {
     "title": "I am fffffff long text I am ffffff long text I am ffffffffff long text",
@@ -42,12 +43,17 @@ const longTest: Clipping = {
 
 
 export default function Display(props: Props) {
-    const listRef:any = React.useRef(null);
+    const listRef: any = React.useRef(null);
     const scrollerRef = React.useRef(null);
     const cellMeasurerCache = React.useRef(new CellMeasurerCache({defaultHeight: 144.667, fixedWidth: true}));
-    if (listRef.current != null && props.clippings.length !== listRef.current.props.rowCount) {
+    const [forceRerender, setForceRerender] = React.useState(true);
+    React.useEffect(() => {
         cellMeasurerCache.current.clearAll();
-    }
+        // This is only used to force rerender on specific properties change, because otherwise
+        // clippings would be rendered in insufficient or abundant space
+        setForceRerender(!forceRerender);
+    }, [props.clippings.length, props.displayOptions]);
+
     const renderRow: ListRowRenderer = ({index, key, parent, style}) => {
         const c = props.clippings[index];
         return (
@@ -59,8 +65,7 @@ export default function Display(props: Props) {
                 parent={parent}
             >
                 <div style={style} key={key}>
-                    <Highlight clipping={c} showNotes={props.showNotes}
-                               showSurroundingContent={props.showSurroundingContent}/>
+                    <Highlight clipping={c} displayOptions={props.displayOptions}/>
                 </div>
             </CellMeasurer>
         )
@@ -90,7 +95,15 @@ export default function Display(props: Props) {
             )}
         </WindowScroller>
     }
-    return <div><Highlight clipping={test} showNotes showSurroundingContent/><Highlight clipping={longTest} showNotes/>
+    return <div>
+        <Highlight clipping={test} displayOptions={{
+            showNotesWithHighlightsTogether: true,
+            surrounding: {show: true, sentencesNumber: 1}
+        }}/>
+        <Highlight clipping={longTest} displayOptions={{
+            showNotesWithHighlightsTogether: true,
+            surrounding: {show: false, sentencesNumber: 1}
+        }}/>
     </div>;
 }
 
