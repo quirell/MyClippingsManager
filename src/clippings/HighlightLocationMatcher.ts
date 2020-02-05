@@ -1,4 +1,4 @@
-import {Book, Clipping} from "../clippings/Clipping";
+import {Book, Clipping} from "./Clipping";
 import axios from "axios"
 import _ from "lodash"
 

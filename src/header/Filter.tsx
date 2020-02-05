@@ -13,8 +13,8 @@ import {
 import React from "react";
 import DateFnsUtils from "@date-io/date-fns";
 import {DatePicker, MuiPickersUtilsProvider} from "@material-ui/pickers";
-import {Filters} from "./filters/filterClippings";
-import {Book} from "./clippings/Clipping";
+import {Filters} from "../filters/filterClippings";
+import {Book} from "../clippings/Clipping";
 import Tooltip from "@material-ui/core/Tooltip";
 
 const styles = createStyles({
@@ -23,7 +23,7 @@ const styles = createStyles({
     },
     numberInput: {
         margin: "-22px 9px 0 9px",
-        width: 100,
+        width: 80,
     },
     multiselect: {
         margin: "-22px 9px 0 9px",

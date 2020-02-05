@@ -1,4 +1,4 @@
-import {SurroundingContent} from "../mobi/HighlightLocationMatcher";
+import {SurroundingContent} from "./HighlightLocationMatcher";
 
 export enum Type {
     note,
@@ -25,6 +25,12 @@ export interface Clipping extends Metadata {
     notes?: Clipping[],
     surrounding?: SurroundingContent[]
 }
+
+export interface Highlight extends Clipping{
+    notes?: Clipping[],
+    surrounding?: SurroundingContent[]
+}
+
 
 export interface Book {
     title: string,

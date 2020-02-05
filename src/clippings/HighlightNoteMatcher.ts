@@ -49,7 +49,7 @@ export function joinNoteWithHighlightByLocation(clippings: Clipping[]): void {
                     highlights.delete(tip.clipping);
             } else if (tip.clipping.type === Type.note) {
                 highlights.forEach(h => h.notes ?
-                    h.notes.indexOf(tip.clipping) < 0 && h.notes.push(tip.clipping) :
+                    h.notes.find(c => c === tip.clipping) && h.notes.push(tip.clipping) :
                     h.notes = [tip.clipping]);
             }
         });

@@ -3,11 +3,13 @@ import "react-table/react-table.css";
 import Highlight from "./Highlight";
 import {Clipping} from "./clippings/Clipping";
 import {AutoSizer, CellMeasurer, CellMeasurerCache, List, ListRowRenderer, WindowScroller} from "react-virtualized";
-import {DisplayOptions} from "./DisplayOptions";
+import {DisplayOptions} from "./header/DisplayOptions";
+import {RemoveHandler} from "./App";
 
 interface Props {
     clippings: Clipping[];
     displayOptions: DisplayOptions;
+    removeClipping: RemoveHandler
 }
 
 const test: Clipping = {
@@ -65,7 +67,7 @@ export default function Display(props: Props) {
                 parent={parent}
             >
                 <div style={style} key={key}>
-                    <Highlight clipping={c} displayOptions={props.displayOptions}/>
+                    <Highlight clipping={c} displayOptions={props.displayOptions} removeClipping={props.removeClipping}/>
                 </div>
             </CellMeasurer>
         )
@@ -99,11 +101,11 @@ export default function Display(props: Props) {
         <Highlight clipping={test} displayOptions={{
             showNotesWithHighlightsTogether: true,
             surrounding: {show: true, sentencesNumber: 1}
-        }}/>
+        }} removeClipping={props.removeClipping}/>
         <Highlight clipping={longTest} displayOptions={{
             showNotesWithHighlightsTogether: true,
             surrounding: {show: false, sentencesNumber: 1}
-        }}/>
+        }} removeClipping={props.removeClipping}/>
     </div>;
 }
 

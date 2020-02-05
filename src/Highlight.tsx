@@ -15,7 +15,8 @@ import {
 } from "@material-ui/core";
 import {Clipping} from "./clippings/Clipping";
 import clsx from "clsx";
-import {DisplayOptions} from "./DisplayOptions";
+import {DisplayOptions} from "./header/DisplayOptions";
+import {RemoveHandler} from "./App";
 
 const styles = createStyles({
     card: {
@@ -57,10 +58,11 @@ interface Props extends WithStyles<typeof styles> {
     clipping: Clipping
     style?: any
     displayOptions: DisplayOptions
+    removeClipping : RemoveHandler
 }
 
 function Highlight(props: Props) {
-    const {clipping, classes, style, displayOptions} = props;
+    const {clipping, classes, style, displayOptions, removeClipping} = props;
     return (
         <Card className={classes.card} style={style}>
             <CardContent>
@@ -106,7 +108,7 @@ function Highlight(props: Props) {
                             {clipping.surrounding[displayOptions.surrounding.sentencesNumber].after}
                         </span>}
                     </Typography>
-                    <IconButton edge={"end"} size={"small"}>
+                    <IconButton edge={"end"} size={"small"} onClick={() => removeClipping(clipping)}>
                         <Icon className={"fas fa-trash-alt"}/>
                     </IconButton>
                 </div>
@@ -118,7 +120,7 @@ function Highlight(props: Props) {
                         (<ListItem key={note.date.getTime()}>
                             <ListItemText inset primary={note.content}/>
                             <ListItemSecondaryAction>
-                                <IconButton edge={"end"} size={"small"}>
+                                <IconButton edge={"end"} size={"small"} onClick={() => removeClipping(clipping)}>
                                     <Icon className={"fas fa-trash-alt"}/>
                                 </IconButton>
                             </ListItemSecondaryAction>
