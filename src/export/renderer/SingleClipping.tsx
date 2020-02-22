@@ -1,14 +1,22 @@
 import {Clipping} from "../../clippings/Clipping";
 import React from "react";
+import {DisplayOptions} from "../../header/DisplayOptions";
 
 interface SingleClippingProps {
-    clipping: Clipping
+    clipping: Clipping,
+    displayOptions: DisplayOptions
 }
 
-export default function SingleClipping({clipping}: SingleClippingProps){
+export default function SingleClipping({clipping,displayOptions}: SingleClippingProps){
+    const { surrounding, showNotesWithHighlightsTogether } = displayOptions
     return (
         <>
-            {clipping.content}
+            <p>{clipping.content}</p>
+            { showNotesWithHighlightsTogether && clipping.notes &&
+                <li>
+                    {clipping.notes.map((note) => (<ul><i>{note.content}</i></ul>))}
+                </li>
+            }
             <br/>
         </>
     )

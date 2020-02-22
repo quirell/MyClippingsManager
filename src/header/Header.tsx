@@ -29,14 +29,13 @@ interface Props extends WithStyles<typeof styles> {
     setFilters: (filters: Filters) => void
     otherSettings: OtherSettings
     setOtherSettings: (otherSettings: OtherSettings) => void
+    exportClippings: () => void
 }
 
 function Header(props: Props) {
-
-
     return (
         <Card className={props.classes.card}>
-            <OtherSettingsView otherSettings={props.otherSettings} setOtherSettings={props.setOtherSettings}/>
+            <OtherSettingsView exportClippings={props.exportClippings} otherSettings={props.otherSettings} setOtherSettings={props.setOtherSettings}/>
             <Divider orientation={"vertical"}/>
             <DisplayOptionsView displayOptions={props.displayOptions} setDisplayOptions={props.setDisplayOptions}/>
             <Divider orientation={"vertical"}/>

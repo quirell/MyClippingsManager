@@ -51,7 +51,6 @@ const App: React.FC = () => {
         console.log("starting" + new Date().toISOString());
         console.time("parsing");
         const clippings = await parseClippingsFile(file);
-        new ClippingsRenderer().render(clippings,{clippingsPerPage:3,name:"filek"});
         clippingsRef.current = clippings;
         console.timeEnd("parsing");
         console.time("joining");
@@ -131,6 +130,11 @@ const App: React.FC = () => {
         // console.log("rendering   end" + new Date().toISOString());
     };
 
+    const exportClippings = () => {
+        const renderer = new ClippingsRenderer(otherSettings.renderOptions,displayOptions,clippings);
+        renderer.render()
+    }
+
     const setAndFilter = (filters: Filters) => {
         setFilters(filters);
         setClippings(filterClippings(clippingsRef.current, filters));
@@ -142,7 +146,7 @@ const App: React.FC = () => {
                 Select MyClippings File
             </Button>
             <br/>
-            <Header filters={filters} setFilters={setAndFilter} authors={authors} books={books}
+            <Header exportClippings={exportClippings} filters={filters} setFilters={setAndFilter} authors={authors} books={books}
                     displayOptions={displayOptions} setDisplayOptions={setDisplayOptions}
                     otherSettings={otherSettings} setOtherSettings={setOtherSettings} />
             <br/>

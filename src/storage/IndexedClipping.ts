@@ -14,10 +14,12 @@ interface ClippingsStore {
 //     private db : Dexie & {clippings : Dexie.Table<Clipping,string>, books : Dexie.Table<Book,string>};
 //
 //     constructor(){
-//         this.db = new Dexie("ClippingsDB") as any;
+//         // @ts-ignore
+//         this.db = new Dexie("ClippingsDB");
 //         this.db.version(1).stores({
 //             clippings: "id,notes.id",
-//             books: "title"
+//             books: "title",
+//             authors: "name"
 //         });
 //     }
 //
@@ -81,4 +83,6 @@ interface ClippingsStore {
 //         clipping1.type === clipping2.type &&
 //         clipping1.content.valueOf() === clipping2.content.valueOf()
 // }
+//
+//
 //

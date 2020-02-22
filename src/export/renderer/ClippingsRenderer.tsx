@@ -4,36 +4,40 @@ import _ from "lodash"
 import SingleClipping from "./SingleClipping";
 import * as React from "react";
 import {RenderBody} from "./RenderBody";
+import {DisplayOptions} from "../../header/DisplayOptions";
 
 export interface RenderOptions {
     name?: string,
     clippingsPerPage?: number,
-    clippingsPerFile?: number
+    clippingsPerFile?: number,
 }
 
 export class ClippingsRenderer {
+    private defaultedOptions: Required<RenderOptions>;
 
-    render(clippings: Clipping[], options: RenderOptions){
-        const defaultedOptions: Required<RenderOptions> = {
+    constructor(options: RenderOptions, private displayOptions: DisplayOptions, private clippings: Clipping[]){
+        this.defaultedOptions = {
             name: "exported-clippings.txt",
             clippingsPerPage: 5,
             clippingsPerFile: clippings.length,
             ...options};
-        _(clippings)
-            .chunk(defaultedOptions.clippingsPerFile)
-            .map(cs => this.renderSingle(cs,defaultedOptions))
-            .map(content =>   _.delay(() => this.triggerDownload(content,defaultedOptions),300))
+    }
+    render(){
+        _(this.clippings)
+            .chunk(this.defaultedOptions.clippingsPerFile)
+            .map(cs => this.renderSingle(cs,this.defaultedOptions,this.displayOptions))
+            .map(content =>   _.delay(() => this.triggerDownload(content,this.defaultedOptions),300))
             .value()
     }
 
-    private renderSingle(clippings: Clipping[],options: Required<RenderOptions>) {
+    private renderSingle(clippings: Clipping[],options: Required<RenderOptions>,displayOptions: DisplayOptions) {
         const clippingViews = _(clippings)
             .chunk(options.clippingsPerPage)
             .map(cs =>
                 `${renderToString(
                     <>
                         {
-                            cs.map(c => (<SingleClipping clipping={c}/>))
+                            cs.map(c => (<SingleClipping clipping={c} displayOptions={displayOptions}/>))
                         }
                     </>
                 )}<mbp:pagebreak />`
