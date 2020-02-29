@@ -8,7 +8,7 @@ interface SingleClippingProps {
 }
 
 export default function SingleClipping({clipping,displayOptions}: SingleClippingProps){
-    const { surrounding, showNotesWithHighlightsTogether } = displayOptions
+    const { surrounding, showNotesWithHighlightsTogether } = displayOptions;
     return (
         <>
             <p>{clipping.content}</p>

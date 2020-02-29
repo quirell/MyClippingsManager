@@ -22,15 +22,19 @@ export interface Clipping extends Metadata {
     title: string,
     author?: string,
     content: string,
-    notes?: Clipping[],
-    surrounding?: SurroundingContent[]
+    // Content after user modifies it
+    modifiedContent?: string,
+    notes?: Note[],
+    surrounding?: SurroundingContent[],
+    addedOn: Date,
+    id: string,
+    deleted?: boolean
 }
 
-export interface Highlight extends Clipping{
-    notes?: Clipping[],
-    surrounding?: SurroundingContent[]
+export interface Note {
+    id: string,
+    content: string
 }
-
 
 export interface Book {
     title: string,

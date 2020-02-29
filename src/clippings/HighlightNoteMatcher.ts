@@ -30,30 +30,41 @@ class ClippingEnd implements ClippingTip {
 }
 
 
-
-// It is basically the overlapping intervals algorithm
-export function joinNoteWithHighlightByLocation(clippings: Clipping[]): void {
+function AddNotesToClippings(clippings: Clipping[]){
     const byBook = _.groupBy(clippings, c => c.title + c.author);
     //if one clipping in a book has a location then all have it
     const byBookWithLocation = _.pickBy(byBook, clippings => clippings[0].location !== undefined);
-    const clippingTipsByBook = _.mapValues(byBookWithLocation, clippings => _.sortBy(
-        _.flatMap(clippings, c => [new ClippingStart(c), new ClippingEnd(c)]),
-        ["value", "sortOrder", "clipping.type"]));
+    for (let byBookWithLocationKey in byBookWithLocation) {
 
-    _.forEach(clippingTipsByBook, book => {
-        const highlights: Set<Clipping> = new Set();
+    }
+    _.forEach(byBookWithLocation,book => {
+        joinNoteWithHighlightByLocation(book)
+    })
+}
 
-        book.forEach((tip: ClippingTip) => {
+// It is basically the overlapping intervals algorithm
+export function joinNoteWithHighlightByLocation(clippings: Clipping[]): Set<Clipping> {
+    const highlights: Set<Clipping> = new Set();
+    const updated = new Set<Clipping>();
+    _(clippings)
+        .flatMap(c => [new ClippingStart(c), new ClippingEnd(c)])
+        .sortBy(["value", "sortOrder", "clipping.type"])
+        .forEach((tip: ClippingTip) => {
             if (tip.clipping.type === Type.highlight) {
                 if (tip instanceof ClippingStart)
                     highlights.add(tip.clipping);
                 else
                     highlights.delete(tip.clipping);
             } else if (tip.clipping.type === Type.note) {
-                highlights.forEach(h => h.notes ?
-                    h.notes.find(c => c === tip.clipping) && h.notes.push(tip.clipping) :
-                    h.notes = [tip.clipping]);
+                highlights.forEach(h => {
+                    if(!h.notes){
+                        h.notes = [tip.clipping];
+                        updated.has()
+                    }
+                    else if(!h.notes.find(c => c.id !== tip.clipping.id))
+                        h.notes.push({id: tip.clipping.id,content: tip.clipping.content})
+                });
             }
         });
-    });
+    return updated;
 }

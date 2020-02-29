@@ -2,6 +2,7 @@ import _ from "lodash";
 import {Clipping, Metadata, Position, Type} from "./Clipping";
 import {RawClipping} from "./ClippingReader";
 import {findIndexOrError, matchOrError} from "../utils/Utils";
+import hash_sum from "hash-sum";
 
 enum NavigationType {
     none = -1,
@@ -78,7 +79,10 @@ export class ClippingParser {
         return {
             ...ClippingParser.parseTitleLine(rawClipping.titleAuthorLine),
             content: rawClipping.contentLine,
-            ...this.parseMetadata(rawClipping.metadataLine)
+            ...this.parseMetadata(rawClipping.metadataLine),
+            // TODO make sure that id is unique
+            id: hash_sum(rawClipping),
+            addedOn: new Date()
         }
     }
 }
