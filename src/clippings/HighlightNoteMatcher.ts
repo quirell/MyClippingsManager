@@ -3,7 +3,8 @@ import _ from "lodash";
 
 interface ClippingTip {
     value: number
-    sortOrder: 0 | 1
+    isEnd: boolean
+    isNote: boolean
     clipping: Clipping
 }
 
@@ -12,9 +13,10 @@ class ClippingStart implements ClippingTip {
         return this.clipping.location!.start;
     }
 
-    readonly sortOrder = 0;
-
+    readonly isEnd = false;
+    isNote : boolean;
     constructor(public clipping: Clipping) {
+        this.isNote = clipping.type === Type.note;
     }
 }
 
@@ -23,9 +25,10 @@ class ClippingEnd implements ClippingTip {
         return this.clipping.location!.end;
     }
 
-    readonly sortOrder = 1;
-
+    readonly isEnd = true;
+    isNote : boolean;
     constructor(public clipping: Clipping) {
+        this.isNote = clipping.type === Type.note;
     }
 }
 
@@ -48,7 +51,7 @@ export function joinNoteWithHighlightByLocation(clippings: Clipping[]): Set<Clip
     const updated = new Set<Clipping>();
     _(clippings)
         .flatMap(c => [new ClippingStart(c), new ClippingEnd(c)])
-        .sortBy(["value", "sortOrder", "clipping.type"])
+        .sortBy(["value", "isEnd", "isNote"])
         .forEach((tip: ClippingTip) => {
             if (tip.clipping.type === Type.highlight) {
                 if (tip instanceof ClippingStart)
@@ -58,11 +61,12 @@ export function joinNoteWithHighlightByLocation(clippings: Clipping[]): Set<Clip
             } else if (tip.clipping.type === Type.note) {
                 highlights.forEach(h => {
                     if(!h.notes){
-                        h.notes = [tip.clipping];
-                        updated.has()
+                        h.notes = [{id: tip.clipping.id,content: tip.clipping.content}];
+                        updated.add(h);
+                    } else if(!h.notes.find(c => c.id === tip.clipping.id)){
+                        h.notes.push({id: tip.clipping.id,content: tip.clipping.content});
+                        updated.add(h);
                     }
-                    else if(!h.notes.find(c => c.id !== tip.clipping.id))
-                        h.notes.push({id: tip.clipping.id,content: tip.clipping.content})
                 });
             }
         });

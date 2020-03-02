@@ -23,7 +23,7 @@ const styles = createStyles({
 interface Props extends WithStyles<typeof styles> {
     displayOptions: DisplayOptions
     setDisplayOptions: (displayOptions: DisplayOptions) => void
-    books: Book[]
+    titles: string[]
     authors: string[]
     filters: Filters
     setFilters: (filters: Filters) => void
@@ -39,7 +39,7 @@ function Header(props: Props) {
             <Divider orientation={"vertical"}/>
             <DisplayOptionsView displayOptions={props.displayOptions} setDisplayOptions={props.setDisplayOptions}/>
             <Divider orientation={"vertical"}/>
-            <Filter books={props.books} authors={props.authors} filters={props.filters} setFilters={props.setFilters}/>
+            <Filter titles={props.titles} authors={props.authors} filters={props.filters} setFilters={props.setFilters}/>
         </Card>)
 }
 

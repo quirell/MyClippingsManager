@@ -4,16 +4,18 @@ import _ from "lodash"
 import {createClippingFilter, Filters} from "../filters/filterClippings";
 import {joinNoteWithHighlightByLocation} from "../clippings/HighlightNoteMatcher";
 
-interface ClippingsStore {
+export interface ClippingsStore {
     addAllClippings(clippings: Clipping[]): Promise<void>
     getClippings(filters: Filters, page: Pagination): Promise<Clipping[]>
     deleteClipping(id: string): Promise<void>
     updateClipping(toUpdate: Clipping): Promise<void>
+    countClippings(filters: Filters) : Promise<number>
     getAllAuthors(): Promise<string[]>
     getAllTitles(): Promise<string[]>
 }
-interface Pagination{
-    page: number
+export interface Pagination{
+    startIndex: number
+    stopIndex: number
 }
 
 class IndexedDbClippingStore implements ClippingsStore{
@@ -22,7 +24,6 @@ class IndexedDbClippingStore implements ClippingsStore{
         clippings : Dexie.Table<Clipping,string>
         books : Dexie.Table<Book,string>
     };
-    private pageSize = 50;
 
     constructor(){
         // @ts-ignore
@@ -36,8 +37,8 @@ class IndexedDbClippingStore implements ClippingsStore{
         const filter = createClippingFilter(filters);
         return this.db.clippings
             .filter(filter)
-            .offset(pagination.page*this.pageSize)
-            .limit(this.pageSize)
+            .offset(pagination.startIndex)
+            .limit(pagination.stopIndex-pagination.startIndex)
             .toArray()
     }
 
@@ -74,7 +75,7 @@ class IndexedDbClippingStore implements ClippingsStore{
                 .equals(book)
                 .toArray();
             const updated = joinNoteWithHighlightByLocation([...existing,...bookClippings]);
-            updatedClippings = [...updatedClippings,...existing.filter(c => updated.has(c))]
+            updatedClippings = [...updatedClippings,...bookClippings,...existing.filter(c => updated.has(c))];
         }
 
         await this.db.clippings.bulkAdd(newClippings);
@@ -85,12 +86,19 @@ class IndexedDbClippingStore implements ClippingsStore{
         await this.db.clippings.put(toUpdate);
     }
 
+    countClippings(filters: Filters): Promise<number> {
+        const filter = createClippingFilter(filters);
+        return this.db.clippings
+            .filter(filter)
+            .count();
+    }
+
     async getAllAuthors() : Promise<string[]>{
-        return this.db.clippings.orderBy("author").keys() as Promise<string[]>;
+        return this.db.clippings.orderBy("author").uniqueKeys() as Promise<string[]>;
     }
 
     async getAllTitles() : Promise<string[]>{
-        return this.db.clippings.orderBy("title").keys() as Promise<string[]>;
+        return this.db.clippings.orderBy("title").uniqueKeys() as Promise<string[]>;
     }
 }
 

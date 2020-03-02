@@ -13,10 +13,9 @@ import {
     WithStyles,
     withStyles
 } from "@material-ui/core";
-import {Clipping} from "./clippings/Clipping";
+import {Clipping, Note} from "./clippings/Clipping";
 import clsx from "clsx";
 import {DisplayOptions} from "./header/DisplayOptions";
-import {RemoveHandler} from "./App";
 
 const styles = createStyles({
     card: {
@@ -25,6 +24,13 @@ const styles = createStyles({
     header: {
         display: "flex",
         flexWrap: "wrap",
+        justifyContent: "space-between",
+        "& :first-child": {
+            marginRight: "auto"
+        }
+    },
+    contentContainer: {
+        display: "flex",
         justifyContent: "space-between",
         "& :first-child": {
             marginRight: "auto"
@@ -54,15 +60,19 @@ const styles = createStyles({
     }
 });
 
+type RemoveHandler = (clipping: Clipping) => void;
+type RemoveNoteHandler = (clipping: Clipping, note: Note) => void;
+
 interface Props extends WithStyles<typeof styles> {
     clipping: Clipping
     style?: any
     displayOptions: DisplayOptions
     removeClipping : RemoveHandler
+    removeNote: RemoveNoteHandler
 }
 
 function Highlight(props: Props) {
-    const {clipping, classes, style, displayOptions, removeClipping} = props;
+    const {clipping, classes, style, displayOptions, removeClipping, removeNote} = props;
     return (
         <Card className={classes.card} style={style}>
             <CardContent>
@@ -96,7 +106,7 @@ function Highlight(props: Props) {
                         className={clsx(classes.icon, 'far fa-dot-circle')}/>{`${clipping.location.start} - ${clipping.location.end}`}
                     </Typography>}
                 </div>
-                <div className={classes.header}>
+                <div className={classes.contentContainer}>
                     <Typography variant={"body2"} className={classes.content}>
                         {displayOptions.surrounding.show && clipping.surrounding &&
                         <span className={classes.surrounding}>
@@ -117,10 +127,10 @@ function Highlight(props: Props) {
                 clipping.notes && clipping.notes.length > 0 &&
                 <List className={classes.note} dense>
                     {clipping.notes.map(note =>
-                        (<ListItem key={note.date.getTime()}>
+                        (<ListItem key={note.id}>
                             <ListItemText inset primary={note.content}/>
                             <ListItemSecondaryAction>
-                                <IconButton edge={"end"} size={"small"} onClick={() => removeClipping(clipping)}>
+                                <IconButton edge={"end"} size={"small"} onClick={() => removeNote(clipping,note)}>
                                     <Icon className={"fas fa-trash-alt"}/>
                                 </IconButton>
                             </ListItemSecondaryAction>

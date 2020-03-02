@@ -14,7 +14,6 @@ import React from "react";
 import DateFnsUtils from "@date-io/date-fns";
 import {DatePicker, MuiPickersUtilsProvider} from "@material-ui/pickers";
 import {Filters} from "../filters/filterClippings";
-import {Book} from "../clippings/Clipping";
 import Tooltip from "@material-ui/core/Tooltip";
 
 const styles = createStyles({
@@ -37,14 +36,14 @@ const styles = createStyles({
 });
 
 interface Props extends WithStyles<typeof styles> {
-    books: Book[],
+    titles: string[],
     authors: string[],
     filters: Filters
     setFilters: (filters: Filters) => void
 }
 
 function Filter(props: Props) {
-    const {classes, books, authors, filters, setFilters} = props;
+    const {classes, titles, authors, filters, setFilters} = props;
     const handleChange = (name: string) => (event: React.ChangeEvent<any>) => {
         const value = event.target.type === "checkbox" ? event.target.checked : event.target.value;
         setFilters({...filters, [name]: value});
@@ -104,7 +103,7 @@ function Filter(props: Props) {
                     <Select multiple
                             value={filters.book}
                             onChange={handleChange("book")}>
-                        {books.map(book => <MenuItem key={book.title} value={book as any}>{book.title}</MenuItem>)}
+                        {titles.map(title => <MenuItem key={title} value={title}>{title}</MenuItem>)}
                     </Select>
                 </Tooltip>
             </FormControl>

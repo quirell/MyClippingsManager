@@ -13,7 +13,7 @@ export interface Filters {
     location: number | ""
     page: number | ""
     author: string[]
-    book: Book[]
+    book: string[]
 }
 
 class Filter {
@@ -35,7 +35,7 @@ const filterList = [
     new Filter(f => f.location !== "", (c, f) =>
         c.location !== undefined && c.location.start <= f.location && f.location <= c.location.end),
     new Filter(f => f.author.length > 0, (c, f) => f.author.includes(c.author!)),
-    new Filter(f => f.book.length > 0, (c, f) => f.book.find(b => b.title === c.title) as any as boolean),
+    new Filter(f => f.book.length > 0, (c, f) => !!f.book.find(b => b === c.title)),
     new Filter(f => f.content !== "", (c, f) => c.content.includes(f.content))
 ];
 
