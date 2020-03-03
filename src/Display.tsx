@@ -71,7 +71,11 @@ export default function Display(props: Props) {
             .countClippings(props.filters)
             .then(setClippingsCount)
             .then(() => ClippingsStore.getClippings(props.filters,{startIndex:0,stopIndex:30}))
-            .then(setClippings);
+            .then((clippings) => {
+                setClippings(clippings);
+                cellMeasurerCache.current.clearAll();
+                setForceRerender(!forceRerender);
+            });
     },[props.filters]);
 
     React.useEffect(() => {
@@ -86,6 +90,7 @@ export default function Display(props: Props) {
     };
 
     const rowCount = () => clippings.length;
+
     const loadMoreRows = async (indexRange:IndexRange) : Promise<void> => {
         const nextBatch = await ClippingsStore.getClippings(props.filters,indexRange);
         setClippings([...clippings,...nextBatch]);
