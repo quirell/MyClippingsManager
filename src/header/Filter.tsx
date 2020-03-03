@@ -10,11 +10,12 @@ import {
     WithStyles,
     withStyles
 } from "@material-ui/core";
-import React from "react";
+import React, {ChangeEvent} from "react";
 import DateFnsUtils from "@date-io/date-fns";
 import {DatePicker, MuiPickersUtilsProvider} from "@material-ui/pickers";
 import {Filters} from "../filters/filterClippings";
 import Tooltip from "@material-ui/core/Tooltip";
+import {SelectProps} from "@material-ui/core/Select";
 
 const styles = createStyles({
     textField: {
@@ -102,6 +103,7 @@ function Filter(props: Props) {
                 <Tooltip title={"Show only Clippings of selected books"}>
                     <Select multiple
                             value={filters.book}
+                            MenuProps={{onExited: () => (document.activeElement as HTMLElement).blur()}}
                             onChange={handleChange("book")}>
                         {titles.map(title => <MenuItem key={title} value={title}>{title}</MenuItem>)}
                     </Select>

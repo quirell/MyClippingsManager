@@ -29,13 +29,18 @@ class IndexedDbClippingStore implements ClippingsStore{
         // @ts-ignore
         this.db = new Dexie("ClippingsDB");
         this.db.version(1).stores({
-            clippings: "id,notes.id,title,author"
+            clippings: "id,notes.id,title,author,[title+location.start],page.start,date"
         });
     }
 
     async getClippings(filters: Filters, pagination: Pagination): Promise<Clipping[]> {
         const filter = createClippingFilter(filters);
-        return this.db.clippings
+        let query = null;
+        if(filters.book.length > 0)
+            query= this.db.clippings.orderBy("[title+location.start]");
+        else
+            query = this.db.clippings.orderBy("date");
+        return query
             .filter(filter)
             .offset(pagination.startIndex)
             .limit(pagination.stopIndex-pagination.startIndex)

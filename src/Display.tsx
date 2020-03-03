@@ -142,6 +142,7 @@ export default function Display(props: Props) {
                         <AutoSizer disableHeight>
                             {({width}) => (
                                 <List
+                                    style={{outline: 0}}
                                     autoHeight
                                     deferredMeasurementCache={cellMeasurerCache.current}
                                     height={height}
