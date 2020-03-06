@@ -60,11 +60,13 @@ export function joinNoteWithHighlightByLocation(clippings: Clipping[]): Set<Clip
                     highlights.delete(tip.clipping);
             } else if (tip.clipping.type === Type.note) {
                 highlights.forEach(h => {
-                    if(!h.notes){
-                        h.notes = [{id: tip.clipping.id,content: tip.clipping.content}];
+                    if(!h.noteIds){
+                        h.noteIds =  [tip.clipping.id];
+                        h.notes = [tip.clipping.content];
                         updated.add(h);
-                    } else if(!h.notes.find(c => c.id === tip.clipping.id)){
-                        h.notes.push({id: tip.clipping.id,content: tip.clipping.content});
+                    } else if(!h.noteIds!.find(id => id === tip.clipping.id)){
+                        h.noteIds!.push(tip.clipping.id);
+                        h.notes!.push(tip.clipping.content);
                         updated.add(h);
                     }
                 });

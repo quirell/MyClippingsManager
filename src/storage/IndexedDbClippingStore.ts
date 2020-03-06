@@ -5,9 +5,20 @@ import {createClippingFilter, Filters} from "../filters/filterClippings";
 import {joinNoteWithHighlightByLocation} from "../clippings/HighlightNoteMatcher";
 
 export interface ClippingsStore {
+    /**
+     * Stores clippings and adds new notes to Highlights if any
+     */
     addAllClippings(clippings: Clipping[]): Promise<void>
     getClippings(filters: Filters, page: Pagination): Promise<Clipping[]>
-    deleteClipping(id: string): Promise<void>
+    /**
+     * Marks the clipping as deleted and returns list clippings that have been modified by this process.
+     */
+    deleteClipping(id: string): Promise<Clipping[]>
+
+    /**
+     * Marks all the clippings selected by the filter as deleted
+     */
+    deleteClippings(filters: Filters) : Promise<void>
     updateClipping(toUpdate: Clipping): Promise<void>
     countClippings(filters: Filters) : Promise<number>
     getAllAuthors(): Promise<string[]>
@@ -29,7 +40,7 @@ class IndexedDbClippingStore implements ClippingsStore{
         // @ts-ignore
         this.db = new Dexie("ClippingsDB");
         this.db.version(1).stores({
-            clippings: "id,notes.id,title,author,[title+location.start],page.start,date"
+            clippings: "id,[deleted+title],*noteIds,[deleted+author],[title+location.start],date"
         });
     }
 
@@ -47,24 +58,36 @@ class IndexedDbClippingStore implements ClippingsStore{
             .toArray()
     }
 
-    async deleteClipping(id: string): Promise<void> {
+    async deleteClippings(filters: Filters){
+        const filter = createClippingFilter(filters);
+        if(filters.note){
+            const onlyNotesFilter = createClippingFilter({...filters,highlight:false,bookmark:false});
+            const noteIds = await this.db.clippings.filter(onlyNotesFilter).keys();
+            const noteIdsToRemove = new Set(noteIds) as Set<string>;
+            this.db.clippings
+                .where("noteIds").anyOf(noteIds)
+                .modify( clipping => removeNoteById(clipping,noteIdsToRemove));
+        }
+        await this.db.clippings.filter(filter).modify({deleted: 1});
+    }
+
+    async deleteClipping(id: string): Promise<Clipping[]> {
         const clipping = await this.db.clippings.where("id").equals(id).first();
         if(!clipping)
             return Promise.reject(`Clipping ${id} doesn't exist`);
+        await this.db.clippings
+            .where("id").equals(id)
+            .modify({deleted: 1});
         if(clipping.type === Type.note){
-            await this.db.clippings.where("notes.id").equals(id).modify(c => {
-                const indexToDelete = c.notes!.findIndex(n => n.id === id);
-                c.notes = c.notes!.splice(indexToDelete,1)
-            })
+            const highlightsToUpdate = await this.db.clippings.where("noteIds").equals(id).toArray();
+            highlightsToUpdate.forEach(c => removeNoteById(c,new Set([id])));
+            await this.db.clippings.bulkPut(highlightsToUpdate);
+            return highlightsToUpdate;
         }
-        await this.db.clippings.where("id").equals(id).modify({deleted: true})
+        return []
     }
-    // clippings to hash-clippings map
-    // save
-    // recompute notes and highlights for new books
 
     async addAllClippings(clippings: Clipping[]): Promise<void> {
-
         const rawKeys = await this.db.clippings.toCollection().primaryKeys();
         const keys = new Set(rawKeys);
         const newClippings = clippings.filter(c => !keys.has(c.id));
@@ -76,11 +99,11 @@ class IndexedDbClippingStore implements ClippingsStore{
         for (let book in clippingsByBook) {
             const bookClippings = clippingsByBook[book]!;
             const existing = await this.db.clippings
-                .where("title")
-                .equals(book)
+                .where("[deleted+title]")
+                .equals(["false",book])
                 .toArray();
             const updated = joinNoteWithHighlightByLocation([...existing,...bookClippings]);
-            updatedClippings = [...updatedClippings,...bookClippings,...existing.filter(c => updated.has(c))];
+            updatedClippings = [...updatedClippings,...existing.filter(c => updated.has(c))];
         }
 
         await this.db.clippings.bulkAdd(newClippings);
@@ -99,11 +122,19 @@ class IndexedDbClippingStore implements ClippingsStore{
     }
 
     async getAllAuthors() : Promise<string[]>{
-        return this.db.clippings.orderBy("author").uniqueKeys() as Promise<string[]>;
+        const keys = await this.db.clippings
+            .where("[deleted+author]")
+            .between([0,Dexie.minKey],[0,Dexie.maxKey])
+            .uniqueKeys() as any[];
+        return keys.map(key => key[1])
     }
 
     async getAllTitles() : Promise<string[]>{
-        return this.db.clippings.orderBy("title").uniqueKeys() as Promise<string[]>;
+        const keys = await this.db.clippings
+            .where("[deleted+title]")
+            .between([0,Dexie.minKey],[0,Dexie.maxKey])
+            .uniqueKeys() as any[];
+        return keys.map(key => key[1])
     }
 }
 
@@ -126,5 +157,8 @@ function clippingsEqual(clipping1: Clipping,clipping2: Clipping){
         clipping1.content.valueOf() === clipping2.content.valueOf()
 }
 
-
-
+export function removeNoteById(clipping: Clipping,noteIdsToRemove:Set<string>){
+    const indexToDelete = clipping.noteIds!.findIndex(noteId => noteIdsToRemove.has(noteId));
+    clipping.noteIds!.splice(indexToDelete,1);
+    clipping.notes!.splice(indexToDelete,1);
+}

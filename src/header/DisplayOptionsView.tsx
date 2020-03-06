@@ -59,8 +59,8 @@ function DisplayOptionsView(props: Props) {
                         defaultValue={1}
                         value={displayOptions.surrounding.sentencesNumber}
                         onChange={handleChange("surrounding.sentencesNumber")}>
-                        {_.range(1, 6).map(sentences => <MenuItem key={sentences}
-                                                                  value={sentences}>{sentences}</MenuItem>)}
+                        {_.range(1, 4).map(sentences =>
+                            <MenuItem key={sentences} value={sentences}>{sentences}</MenuItem>)}
                     </Select>
                 </Tooltip>
             </FormControl>

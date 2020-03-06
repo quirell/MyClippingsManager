@@ -82,7 +82,8 @@ export class ClippingParser {
             ...this.parseMetadata(rawClipping.metadataLine),
             // TODO make sure that id is unique
             id: hash_sum(rawClipping),
-            addedOn: new Date()
+            addedOn: new Date(),
+            deleted: 0
         }
     }
 }

@@ -13,7 +13,7 @@ import {
     WithStyles,
     withStyles
 } from "@material-ui/core";
-import {Clipping, Note} from "./clippings/Clipping";
+import {Clipping} from "./clippings/Clipping";
 import clsx from "clsx";
 import {DisplayOptions} from "./header/DisplayOptions";
 
@@ -61,7 +61,7 @@ const styles = createStyles({
 });
 
 type RemoveHandler = (clipping: Clipping) => void;
-type RemoveNoteHandler = (clipping: Clipping, note: Note) => void;
+type RemoveNoteHandler = (clipping: Clipping, noteId: string) => void;
 
 interface Props extends WithStyles<typeof styles> {
     clipping: Clipping
@@ -126,11 +126,11 @@ function Highlight(props: Props) {
                 {displayOptions.showNotesWithHighlightsTogether &&
                 clipping.notes && clipping.notes.length > 0 &&
                 <List className={classes.note} dense>
-                    {clipping.notes.map(note =>
-                        (<ListItem key={note.id}>
-                            <ListItemText inset primary={note.content}/>
+                    {clipping.noteIds!.map((id,index) =>
+                        (<ListItem key={id}>
+                            <ListItemText inset primary={clipping.notes![index]}/>
                             <ListItemSecondaryAction>
-                                <IconButton edge={"end"} size={"small"} onClick={() => removeNote(clipping,note)}>
+                                <IconButton edge={"end"} size={"small"} onClick={() => removeNote(clipping,id)}>
                                     <Icon className={"fas fa-trash-alt"}/>
                                 </IconButton>
                             </ListItemSecondaryAction>

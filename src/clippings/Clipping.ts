@@ -24,16 +24,12 @@ export interface Clipping extends Metadata {
     content: string,
     // Content after user modifies it
     modifiedContent?: string,
-    notes?: Note[],
+    noteIds?: string[],
+    notes?: string[],
     surrounding?: SurroundingContent[],
     addedOn: Date,
     id: string,
-    deleted?: boolean
-}
-
-export interface Note {
-    id: string,
-    content: string
+    deleted?: 0 | 1
 }
 
 export interface Book {

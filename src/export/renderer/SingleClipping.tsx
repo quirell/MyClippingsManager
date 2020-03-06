@@ -14,7 +14,7 @@ export default function SingleClipping({clipping,displayOptions}: SingleClipping
             <p>{clipping.content}</p>
             { showNotesWithHighlightsTogether && clipping.notes &&
                 <li>
-                    {clipping.notes.map((note) => (<ul><i>{note.content}</i></ul>))}
+                    {clipping.notes.map((note) => (<ul><i>{note}</i></ul>))}
                 </li>
             }
             <br/>

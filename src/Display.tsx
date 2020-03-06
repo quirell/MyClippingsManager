@@ -1,7 +1,7 @@
 import React from 'react';
 import "react-table/react-table.css";
 import Highlight from "./Highlight";
-import {Clipping, Note} from "./clippings/Clipping";
+import {Clipping} from "./clippings/Clipping";
 import {
     AutoSizer,
     CellMeasurer,
@@ -14,7 +14,7 @@ import {
 } from "react-virtualized";
 import {DisplayOptions} from "./header/DisplayOptions";
 import {Filters} from "./filters/filterClippings";
-import {ClippingsStore} from "./storage/IndexedDbClippingStore";
+import {ClippingsStore, removeNoteById} from "./storage/IndexedDbClippingStore";
 import _ from "lodash";
 
 interface Props {
@@ -22,41 +22,41 @@ interface Props {
     displayOptions: DisplayOptions;
 }
 
-const test: Clipping = {
-    id: "23",
-    "title": "こころ",
-    "author": "夏目 漱石",
-    "content": "郷里の関係からでない事は明らかであっ",
-    "date": new Date(123123123),
-    "type": 1,
-    location: {start: 12, end: 123},
-    page: {start: 1, end: 123},
-    notes: [{id: "1234",content: "ASdASDASDASD", date: new Date()} as any],
-    // @ts-ignore
-    surrounding: [null, {before: "asas sad asd as sad sad ", after: "adsa sa dsa asd sad ad s "}]
-};
-const longTest: Clipping = {
-    addedOn: new Date(),
-    id: "12",
-    "title": "I am fffffff long text I am ffffff long text I am ffffffffff long text",
-    "author": "夏目 漱石",
-    "content": "郷里の関係からでない事は明らかであっ ffff ffff ffff ffff fffff \nffffffffff multiline long content haha",
-    "date": new Date(),
-    "type": 1,
-    location: {start: 12, end: 123},
-    page: {start: 1, end: 123},
-    notes: [{
-        id: "123",
-        content: "ASdASDASDASD aaaaaaaaaaaaa aaaaaaaaaaaa aaaaaa\nsaaaaaaaaaaaaaaaaaa",
-        date: new Date(2321322323323)
-    } as any,
-        {
-            id: "1234",
-            content: "bbbbbbbbbbbbbbbbb\nbbbbbbbbbbb bbbfddddddddd dddddddddddddddddddddddfddf",
-            date: new Date(12312312321)
-        } as any,
-        {content: "瞬く間に彼がなくなったなぜなら僕は晴れを殺したからだもしまだここにいるのなら僕の敵討ちするということです", date: new Date()} as any]
-};
+// const test: Clipping = {
+//     id: "23",
+//     "title": "こころ",
+//     "author": "夏目 漱石",
+//     "content": "郷里の関係からでない事は明らかであっ",
+//     "date": new Date(123123123),
+//     "type": 1,
+//     location: {start: 12, end: 123},
+//     page: {start: 1, end: 123},
+//     notes: [{id: "1234",content: "ASdASDASDASD", date: new Date()} as any],
+//     // @ts-ignore
+//     surrounding: [null, {before: "asas sad asd as sad sad ", after: "adsa sa dsa asd sad ad s "}]
+// };
+// const longTest: Clipping = {
+//     addedOn: new Date(),
+//     id: "12",
+//     "title": "I am fffffff long text I am ffffff long text I am ffffffffff long text",
+//     "author": "夏目 漱石",
+//     "content": "郷里の関係からでない事は明らかであっ ffff ffff ffff ffff fffff \nffffffffff multiline long content haha",
+//     "date": new Date(),
+//     "type": 1,
+//     location: {start: 12, end: 123},
+//     page: {start: 1, end: 123},
+//     notes: [{
+//         id: "123",
+//         content: "ASdASDASDASD aaaaaaaaaaaaa aaaaaaaaaaaa aaaaaa\nsaaaaaaaaaaaaaaaaaa",
+//         date: new Date(2321322323323)
+//     } as any,
+//         {
+//             id: "1234",
+//             content: "bbbbbbbbbbbbbbbbb\nbbbbbbbbbbb bbbfddddddddd dddddddddddddddddddddddfddf",
+//             date: new Date(12312312321)
+//         } as any,
+//         {content: "瞬く間に彼がなくなったなぜなら僕は晴れを殺したからだもしまだここにいるのなら僕の敵討ちするということです", date: new Date()} as any]
+// };
 
 
 export default function Display(props: Props) {
@@ -78,11 +78,15 @@ export default function Display(props: Props) {
             });
     },[props.filters]);
 
-    React.useEffect(() => {
+    const refreshView = () => {
         cellMeasurerCache.current.clearAll();
         // This is only used to force rerender on specific properties change, because otherwise
         // clippings would be rendered in insufficient or abundant space
         setForceRerender(!forceRerender);
+    };
+
+    React.useEffect(() => {
+       refreshView();
     }, [props.displayOptions]);
 
     const isRowLoaded = ({index} : Index) => {
@@ -96,16 +100,28 @@ export default function Display(props: Props) {
         setClippings([...clippings,...nextBatch]);
     };
 
-    const removeNote = async (clipping: Clipping, note: Note) => {
-        clipping.notes = _.without(clipping.notes,note);
+    const removeNote = async (clipping: Clipping, noteId: string) => {
+       removeNoteById(clipping,new Set([noteId]));
         await ClippingsStore.updateClipping(clipping);
         setClippings(clippings.map(c => c === clipping? {...clipping} : c));
+        refreshView();
     };
 
     const removeClipping = async(clipping: Clipping) => {
-        await ClippingsStore.deleteClipping(clipping.id);
+        const clippingsToUpdate = await ClippingsStore.deleteClipping(clipping.id);
+        const updatedClippings = new Array(clippingsCount-1);
+        let nextIndex = 0;
+        // TODO this code is probably too complicated, maybe should be replaced with something simpler
+        for(let current of clippings){
+            // Remove clipping
+            if(clipping === current) continue;
+            const index = _.findIndex(clippingsToUpdate,{id:current.id});
+            // If the clipping was note there might be highlights from which note has been removed, so update them
+            updatedClippings[nextIndex++] = index !== -1 ? clippingsToUpdate[index] : current;
+        }
         setClippingsCount(clippingsCount-1);
-        setClippings(_.without(clippings,clipping));
+        setClippings(updatedClippings);
+        refreshView();
     };
 
     const renderRow: ListRowRenderer = ({index, key, parent, style}) => {

@@ -62,6 +62,7 @@ const App: React.FC = () => {
         // locationMatcher.setSurroundings(clippings.filter(c => c.title == "キッチン" && c.type == Type.highlight));
         // // setHighlightsSurroundings(clippings.filter(c => c.title == "Trinitasシリーズ ドリーム・ライフ～夢の異世界生活～" && c.type == Type.highlight), kitchenBook);
         // console.timeEnd("books");
+        // TODO refresh on delete
         setAuthors(await ClippingsStore.getAllAuthors());
         setTitles(await ClippingsStore.getAllTitles());
         setFilters({...filters});
@@ -85,6 +86,11 @@ const App: React.FC = () => {
         renderer.render();
     };
 
+    const deleteAllVisible = async() : Promise<void> => {
+        await ClippingsStore.deleteClippings(filters);
+        setFilters({...filters});
+    };
+
     const setAndFilter = async (filters: Filters) : Promise<void>=> {
         setFilters(filters);
     };
@@ -97,7 +103,7 @@ const App: React.FC = () => {
             </Button>
             <br/>
             <Header exportClippings={exportClippings} filters={filters} setFilters={setAndFilter} authors={authors} titles={titles}
-                    displayOptions={displayOptions} setDisplayOptions={setDisplayOptions}
+                    displayOptions={displayOptions} setDisplayOptions={setDisplayOptions} deleteAllVisible={deleteAllVisible}
                     otherSettings={otherSettings} setOtherSettings={setOtherSettings} />
             <br/>
             <Display filters={filters} displayOptions={displayOptions}/>
