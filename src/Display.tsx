@@ -1,6 +1,6 @@
 import React from 'react';
 import "react-table/react-table.css";
-import Highlight from "./Highlight";
+import Highlight, {RemoveHandler, RemoveNoteHandler} from "./Highlight";
 import {Clipping} from "./clippings/Clipping";
 import {
     AutoSizer,
@@ -14,69 +14,26 @@ import {
 } from "react-virtualized";
 import {DisplayOptions} from "./header/DisplayOptions";
 import {Filters} from "./filters/filterClippings";
-import {ClippingsStore, removeNoteById} from "./storage/IndexedDbClippingStore";
+import {ClippingsStore, Pagination, removeNoteById} from "./storage/IndexedDbClippingStore";
 import _ from "lodash";
 
+
+type LoadClippingsHandler = (pagination: Pagination) => Promise<void>;
+
 interface Props {
-    filters: Filters
     displayOptions: DisplayOptions;
+    clippings: Clipping[];
+    clippingsCount: number;
+    removeClipping: RemoveHandler;
+    removeNote: RemoveNoteHandler;
+    loadClippings: LoadClippingsHandler;
 }
-
-// const test: Clipping = {
-//     id: "23",
-//     "title": "こころ",
-//     "author": "夏目 漱石",
-//     "content": "郷里の関係からでない事は明らかであっ",
-//     "date": new Date(123123123),
-//     "type": 1,
-//     location: {start: 12, end: 123},
-//     page: {start: 1, end: 123},
-//     notes: [{id: "1234",content: "ASdASDASDASD", date: new Date()} as any],
-//     // @ts-ignore
-//     surrounding: [null, {before: "asas sad asd as sad sad ", after: "adsa sa dsa asd sad ad s "}]
-// };
-// const longTest: Clipping = {
-//     addedOn: new Date(),
-//     id: "12",
-//     "title": "I am fffffff long text I am ffffff long text I am ffffffffff long text",
-//     "author": "夏目 漱石",
-//     "content": "郷里の関係からでない事は明らかであっ ffff ffff ffff ffff fffff \nffffffffff multiline long content haha",
-//     "date": new Date(),
-//     "type": 1,
-//     location: {start: 12, end: 123},
-//     page: {start: 1, end: 123},
-//     notes: [{
-//         id: "123",
-//         content: "ASdASDASDASD aaaaaaaaaaaaa aaaaaaaaaaaa aaaaaa\nsaaaaaaaaaaaaaaaaaa",
-//         date: new Date(2321322323323)
-//     } as any,
-//         {
-//             id: "1234",
-//             content: "bbbbbbbbbbbbbbbbb\nbbbbbbbbbbb bbbfddddddddd dddddddddddddddddddddddfddf",
-//             date: new Date(12312312321)
-//         } as any,
-//         {content: "瞬く間に彼がなくなったなぜなら僕は晴れを殺したからだもしまだここにいるのなら僕の敵討ちするということです", date: new Date()} as any]
-// };
-
 
 export default function Display(props: Props) {
     const listRef: any = React.useRef(null);
     const scrollerRef = React.useRef(null);
     const cellMeasurerCache = React.useRef(new CellMeasurerCache({defaultHeight: 144.667, fixedWidth: true}));
     const [forceRerender, setForceRerender] = React.useState(true);
-    const [clippings,setClippings] = React.useState<Clipping[]>([]);
-    const [clippingsCount, setClippingsCount] = React.useState<number>(0);
-    React.useEffect(() => {
-        ClippingsStore
-            .countClippings(props.filters)
-            .then(setClippingsCount)
-            .then(() => ClippingsStore.getClippings(props.filters,{startIndex:0,stopIndex:30}))
-            .then((clippings) => {
-                setClippings(clippings);
-                cellMeasurerCache.current.clearAll();
-                setForceRerender(!forceRerender);
-            });
-    },[props.filters]);
 
     const refreshView = () => {
         cellMeasurerCache.current.clearAll();
@@ -90,42 +47,23 @@ export default function Display(props: Props) {
     }, [props.displayOptions]);
 
     const isRowLoaded = ({index} : Index) => {
-        return !!clippings[index];
+        return !!props.clippings[index];
     };
 
-    const rowCount = () => clippings.length;
-
-    const loadMoreRows = async (indexRange:IndexRange) : Promise<void> => {
-        const nextBatch = await ClippingsStore.getClippings(props.filters,indexRange);
-        setClippings([...clippings,...nextBatch]);
-    };
+    const rowCount = () => props.clippings.length;
 
     const removeNote = async (clipping: Clipping, noteId: string) => {
-       removeNoteById(clipping,new Set([noteId]));
-        await ClippingsStore.updateClipping(clipping);
-        setClippings(clippings.map(c => c === clipping? {...clipping} : c));
+        await props.removeNote(clipping, noteId);
         refreshView();
     };
 
     const removeClipping = async(clipping: Clipping) => {
-        const clippingsToUpdate = await ClippingsStore.deleteClipping(clipping.id);
-        const updatedClippings = new Array(clippingsCount-1);
-        let nextIndex = 0;
-        // TODO this code is probably too complicated, maybe should be replaced with something simpler
-        for(let current of clippings){
-            // Remove clipping
-            if(clipping === current) continue;
-            const index = _.findIndex(clippingsToUpdate,{id:current.id});
-            // If the clipping was note there might be highlights from which note has been removed, so update them
-            updatedClippings[nextIndex++] = index !== -1 ? clippingsToUpdate[index] : current;
-        }
-        setClippingsCount(clippingsCount-1);
-        setClippings(updatedClippings);
+        await props.removeClipping(clipping);
         refreshView();
     };
 
     const renderRow: ListRowRenderer = ({index, key, parent, style}) => {
-        const c = clippings[index];
+        const c = props.clippings[index];
         return (
             <CellMeasurer
                 cache={cellMeasurerCache.current}
@@ -148,9 +86,9 @@ export default function Display(props: Props) {
     return (
         <InfiniteLoader
             isRowLoaded={isRowLoaded}
-            loadMoreRows={loadMoreRows}
-            rowCount={clippingsCount}
-            minimumBatchSize={30}
+            loadMoreRows={props.loadClippings}
+            rowCount={props.clippingsCount}
+            minimumBatchSize={50}
             >
             {({ onRowsRendered, registerChild }) => (
                 <WindowScroller ref={scrollerRef}>
@@ -165,7 +103,7 @@ export default function Display(props: Props) {
                                     isScrolling={isScrolling}
                                     onScroll={onChildScroll}
                                     onRowsRendered={onRowsRendered}
-                                    overscanRowCount={5}
+                                    overscanRowCount={10}
                                     ref={registerChild}
                                     rowHeight={cellMeasurerCache.current.rowHeight}
                                     rowRenderer={renderRow}
@@ -178,16 +116,6 @@ export default function Display(props: Props) {
                     )}
                 </WindowScroller>)}
         </InfiniteLoader>);
-    return <div>
-        {/*<Highlight clipping={test} displayOptions={{*/}
-        {/*    showNotesWithHighlightsTogether: true,*/}
-        {/*    surrounding: {show: true, sentencesNumber: 1}*/}
-        {/*}} removeClipping={() => {}} removeNote={() => {}}/>*/}
-        {/*<Highlight clipping={longTest} displayOptions={{*/}
-        {/*    showNotesWithHighlightsTogether: true,*/}
-        {/*    surrounding: {show: false, sentencesNumber: 1}*/}
-        {/*}} removeClipping={() => {}} removeNote={() => {}}/>*/}
-    </div>;
 }
 
 

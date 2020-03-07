@@ -60,8 +60,8 @@ const styles = createStyles({
     }
 });
 
-type RemoveHandler = (clipping: Clipping) => void;
-type RemoveNoteHandler = (clipping: Clipping, noteId: string) => void;
+export type RemoveHandler = (clipping: Clipping) => void;
+export type RemoveNoteHandler = (clipping: Clipping, noteId: string) => void;
 
 interface Props extends WithStyles<typeof styles> {
     clipping: Clipping
