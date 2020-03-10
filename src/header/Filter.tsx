@@ -13,10 +13,11 @@ import {
 import React, {ChangeEvent} from "react";
 import DateFnsUtils from "@date-io/date-fns";
 import {DatePicker, MuiPickersUtilsProvider} from "@material-ui/pickers";
+import {Autocomplete} from '@material-ui/lab';
 import {Filters} from "../filters/filterClippings";
 import Tooltip from "@material-ui/core/Tooltip";
 import {SelectProps} from "@material-ui/core/Select";
-
+import _ from "lodash";
 const styles = createStyles({
     textField: {
         margin: "-22px 9px 0 9px",
@@ -44,13 +45,18 @@ interface Props extends WithStyles<typeof styles> {
 }
 
 function Filter(props: Props) {
-    const {classes, titles, authors, filters, setFilters} = props;
+    const {classes, titles, authors} = props;
+    const [filters, setFilters] = React.useState(props.filters);
+    const debouncedSetFilters = React.useCallback(_.debounce(props.setFilters, 200), []);
+
     const handleChange = (name: string) => (event: React.ChangeEvent<any>) => {
         const value = event.target.type === "checkbox" ? event.target.checked : event.target.value;
         setFilters({...filters, [name]: value});
+        debouncedSetFilters({...filters, [name]: value});
     };
     const handleDateChange = (name: string) => (date: any) => {
         setFilters({...filters, [name]: date});
+        debouncedSetFilters({...filters, [name]: date});
     };
     return (
         <>
@@ -100,10 +106,25 @@ function Filter(props: Props) {
             </Tooltip>
             <FormControl className={classes.multiselect}>
                 <InputLabel><Icon className={'fas fa-book'}/></InputLabel>
+                {/*
+                // @ts-ignore */}
                 <Tooltip title={"Show only Clippings of selected books"}>
+                    {/*<Autocomplete*/}
+                    {/*    multiple={true}*/}
+                    {/*    options={titles}*/}
+                    {/*    value={filters.book}*/}
+                    {/*    onChange={handleChange("book")}*/}
+                    {/*    renderInput={(params) => (*/}
+                    {/*        <TextField*/}
+                    {/*            {...params}*/}
+                    {/*            variant="standard"*/}
+                    {/*            label="Multiple values"*/}
+                    {/*            placeholder="Favorites"*/}
+                    {/*        />*/}
+                    {/*    )}*/}
+                    {/*/>*/}
                     <Select multiple
                             value={filters.book}
-                            MenuProps={{onExited: () => (document.activeElement as HTMLElement).blur()}}
                             onChange={handleChange("book")}>
                         {titles.map(title => <MenuItem key={title} value={title}>{title}</MenuItem>)}
                     </Select>

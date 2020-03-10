@@ -13,6 +13,9 @@ import {defaultOtherSettings, OtherSettings} from "./header/OtherSettingsView";
 import {ClippingsStore, Pagination, removeNoteById} from "./storage/IndexedDbClippingStore";
 import {IndexRange} from "react-virtualized";
 import _ from "lodash";
+import {BookService} from "./BookService";
+import LocationModal from "./LocationModal";
+import {BookStore} from "./storage/IndexedDbBookStore";
 
 const App: React.FC = () => {
     const openFilePickerRef: any = React.useRef();
@@ -21,10 +24,11 @@ const App: React.FC = () => {
     const [displayOptions, setDisplayOptions] = React.useState<DisplayOptions>(defaultDisplayOptions);
     const [otherSettings, setOtherSettings] = React.useState<OtherSettings>(defaultOtherSettings);
     const [authors, setAuthors] = React.useState<string[]>([]);
-    const [books, setBooks] = React.useState<Book[]>([]);
     const [titles, setTitles] = React.useState<string[]>([]);
     const [clippings, setClippings] = React.useState<Clipping[]>([]);
     const [clippingsCount, setClippingsCount] = React.useState<number>(0);
+    const [locationModalOpen, setLocationModalOpen] = React.useState<boolean>(false);
+    const bookFile = React.useRef<File | null>(null);
 
     React.useEffect(() => {
         ClippingsStore.getAllAuthors().then(setAuthors);
@@ -33,44 +37,34 @@ const App: React.FC = () => {
         // only on init
     },[]);
 
-    function handleBook(file: File){
-        const reader = new FileReader();
-        reader.onload = async () => {
-            // const book = await new BookService().convertBook(reader.result as ArrayBuffer);
-            // const highlightLocationMatcher = new HighlightLocationMatcher(book);
-            // const bookClippings = clippings.filter(c => c.title === book.title);
-            // highlightLocationMatcher.setSurroundings(bookClippings);
-            // // clippingStore.current.add()
-            // // add authors from new clippings
-            // // add books from new clippings
-            //
-            // setBooks(prev => [...prev,book]);
+    async function handleBookInternal(locations: number): Promise<void> {
+        setLocationModalOpen(false);
+        const htmlBook = await BookService.convertBook(bookFile.current!);
+        const book: Book = {...htmlBook, locations};
+        await BookStore.addBook(book);
+        const bookHighlightFilter = {...defaultFilters, book: [book.title], highlight: true};
+        const highlights = await ClippingsStore.getClippings(bookHighlightFilter, {
+            startIndex: 0,
+            stopIndex: Number.MAX_SAFE_INTEGER
+        });
+        const highlightLocationMatcher = new HighlightLocationMatcher(book);
+        highlightLocationMatcher.setSurroundings(highlights, 3);
+        await ClippingsStore.updateClippings(highlights);
+        bookFile.current = null;
+    }
 
-        };
-        reader.readAsArrayBuffer(file);
+    function handleBook(file: File){
+        setLocationModalOpen(true);
+        bookFile.current = file;
     }
 
     async function handleMyClippings(file: File){
         const clippings = await parseClippingsFile(file);
         await ClippingsStore.addAllClippings(clippings);
         await refreshAuthorsAndTitles();
-        // console.time("books");
-        // const books: Book[] = Array.from(titles).map(title => ({title: title}));
-        // const kitchen = await getBookContent1();
-        // // const kitchenBook = books.find(b => b.title === "The Way of Kings")!;
-        // const kitchenBook = books.find(b => b.title === "キッチン")!;
-        // // const kitchenBook = books.find(b => b.title === "Trinitasシリーズ ドリーム・ライフ～夢の異世界生活～")!;
         // // kitchenBook.locations = 18213;
         // kitchenBook.locations = 2190;
         // // kitchenBook.locations = 3451;
-        // kitchenBook.bytes = kitchen;
-        // const locationMatcher = new HighlightLocationMatcher(kitchenBook);
-        // // locationMatcher.setSurroundings(clippings.filter(c => c.title === "The Way of Kings" && c.type === Type.highlight));
-        // locationMatcher.setSurroundings(clippings.filter(c => c.title == "キッチン" && c.type == Type.highlight));
-        // // setHighlightsSurroundings(clippings.filter(c => c.title == "Trinitasシリーズ ドリーム・ライフ～夢の異世界生活～" && c.type == Type.highlight), kitchenBook);
-        // console.timeEnd("books");
-
-        // setBooks(books);
     }
     const fileAdded = async (ev: ChangeEvent<HTMLInputElement>) => {
         const files: (FileList | null) = ev.target.files;
@@ -163,6 +157,10 @@ const App: React.FC = () => {
             <br/>
             <Display displayOptions={displayOptions} clippingsCount={clippingsCount} clippings={clippings}
                      removeNote={removeNote} removeClipping={removeClipping} loadClippings={loadMoreRows}/>
+            <LocationModal open={locationModalOpen}
+                           onCancel={() => setLocationModalOpen(false)}
+                           onAccept={handleBookInternal}
+            />
         </div>
     );
 };

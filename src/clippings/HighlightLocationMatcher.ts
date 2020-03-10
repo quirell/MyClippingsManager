@@ -21,9 +21,7 @@ export class HighlightLocationMatcher {
     private readonly locationSize: number;
 
     constructor(book: Book) {
-        if (!book.locations || !book.bytes)
-            throw Error("book must have locations and bytes");
-        this.book = book as Required<Book>;
+        this.book = book;
         this.bookDataView = new DataView(this.book.bytes);
         this.locationSize = ~~(this.book.bytes.byteLength / this.book.locations);
     }

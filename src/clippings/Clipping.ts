@@ -34,6 +34,6 @@ export interface Clipping extends Metadata {
 
 export interface Book {
     title: string,
-    locations?: number,
-    bytes?: ArrayBuffer
+    locations: number,
+    bytes: ArrayBuffer
 }

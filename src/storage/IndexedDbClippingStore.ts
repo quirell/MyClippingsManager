@@ -20,6 +20,8 @@ export interface ClippingsStore {
      */
     deleteClippings(filters: Filters) : Promise<void>
     updateClipping(toUpdate: Clipping): Promise<void>
+
+    updateClippings(toUpdate: Clipping[]): Promise<void>
     countClippings(filters: Filters) : Promise<number>
     getAllAuthors(): Promise<string[]>
     getAllTitles(): Promise<string[]>
@@ -33,7 +35,6 @@ class IndexedDbClippingStore implements ClippingsStore{
 
     private db : Dexie & {
         clippings : Dexie.Table<Clipping,string>
-        books : Dexie.Table<Book,string>
     };
 
     constructor(){
@@ -112,6 +113,10 @@ class IndexedDbClippingStore implements ClippingsStore{
 
     async updateClipping(toUpdate:Clipping) : Promise<void> {
         await this.db.clippings.put(toUpdate);
+    }
+
+    async updateClippings(toUpdate: Clipping[]): Promise<void> {
+        await this.db.clippings.bulkPut(toUpdate);
     }
 
     countClippings(filters: Filters): Promise<number> {
