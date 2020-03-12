@@ -9,7 +9,8 @@ export class HighlightLocationMatcher {
     private readonly betweenRtTag_htmlTag = /(<rt>.*?<\/rt>)|(<[^<]*>)/g;
     private readonly utfEncoder = new TextEncoder();
     private readonly utfDecoder = new TextDecoder();
-    private readonly FULL_STOPS = [".", "。", "｡"].map(dot => this.utfEncoder.encode(dot));
+    private readonly FULL_STOPS = [".", "。", "｡"];
+    private readonly FULL_STOP_BYTES = this.FULL_STOPS.map(dot => this.utfEncoder.encode(dot));
 
     private readonly SEARCH_RADIUS = 1000;
     private readonly MAX_SEARCH_RADIUS = 10000;
@@ -20,10 +21,30 @@ export class HighlightLocationMatcher {
     private readonly bookDataView: DataView;
     private readonly locationSize: number;
 
+    private readonly HTML_TAG_START = this.utfEncoder.encode("<");
+    private readonly HTML_TAG_END = this.utfEncoder.encode(">");
+    // @ts-ignore
+    private bodyStartByte: number;
+    // @ts-ignore
+    private bodyEndByte: number;
+
     constructor(book: Book) {
         this.book = book;
         this.bookDataView = new DataView(this.book.bytes);
         this.locationSize = ~~(this.book.bytes.byteLength / this.book.locations);
+        this.setBodyBoundaries();
+    }
+
+    private setBodyBoundaries() {
+        let current = 0;
+        const bodyStart = this.utfEncoder.encode("<body");
+        while (current < this.bookDataView.byteLength && !this.isCharacter(current, bodyStart)) current++;
+        this.bodyStartByte = current < this.bookDataView.byteLength ? current : 0;
+
+        current = this.bookDataView.byteLength - 1;
+        const bodyEnd = this.utfEncoder.encode("</body>");
+        while (current > 0 && !this.isCharacter(current, bodyEnd)) current--;
+        this.bodyEndByte = current > 0 ? current : this.bookDataView.byteLength;
     }
 
     private firstValidUtf8ByteAfter(pos: number, buffer: ArrayBuffer) {
@@ -99,47 +120,71 @@ export class HighlightLocationMatcher {
     }
 
     private isFullStop(current: number): number {
-        const result = this.FULL_STOPS.find(dot =>
-            dot.every((byte, index) =>
-                this.bookDataView.getUint8(current + index) === byte)
-        );
+        const result = this.FULL_STOP_BYTES.find(dot => this.isCharacter(current, dot));
         return result ? result.length : 0;
     }
 
-    private surroundingSentences(highlightPosition: HighlightBytePosition, sentences = 1): SurroundingContent {
-        // TODO this doesn't take into account dots that can be inside html tags, exclude them.
+    private isCharacter(current: number, character: Uint8Array): boolean {
+        return character.every((byte, index) =>
+            this.bookDataView.getUint8(current + index) === byte)
+    }
 
-        let startDot = highlightPosition.index;
+    private surroundingSentences(highlightPosition: HighlightBytePosition, sentences = 1) {
+        // TODO simplify the logic: decode part of string, count dots, if less than sentences, decode next part and so on.
+
+        let startChar = highlightPosition.index;
         let sentencesFound = 0;
-        while (sentencesFound < sentences && startDot > 0) {
-            startDot--;
-            if (this.isFullStop(startDot))
+        let insideHtmlTag = false;
+        while (sentencesFound < sentences && startChar > this.bodyStartByte) {
+            startChar--;
+            insideHtmlTag = (insideHtmlTag && !this.isCharacter(startChar, this.HTML_TAG_START)) ||
+                (!insideHtmlTag && this.isCharacter(startChar, this.HTML_TAG_END));
+            if (!insideHtmlTag && this.isFullStop(startChar))
                 sentencesFound++;
         }
-        startDot += this.isFullStop(startDot);
-        // -4 (max utf length) accounts for a case when the last character is some kind of full stop
-        let endDot = highlightPosition.index + highlightPosition.length - 4;
+        startChar += this.isFullStop(startChar);
+        // -4 (max utf length) accounts for the case when the last character is some kind of full stop
+        let endChar = highlightPosition.index + highlightPosition.length - 4;
         sentencesFound = 0;
-        while (sentencesFound < sentences && endDot < this.book.bytes.byteLength) {
-            endDot++;
-            if (this.isFullStop(endDot))
+        insideHtmlTag = false;
+        while (sentencesFound < sentences && endChar < this.bodyEndByte) {
+            endChar++;
+            insideHtmlTag = (!insideHtmlTag && this.isCharacter(endChar, this.HTML_TAG_START)) ||
+                (insideHtmlTag && !this.isCharacter(endChar, this.HTML_TAG_END));
+            if (!insideHtmlTag && this.isFullStop(endChar))
                 sentencesFound++;
         }
 
         return {
-            before: this.utfDecoder.decode(this.book.bytes.slice(startDot, highlightPosition.index))
+            before: this.utfDecoder
+                .decode(this.book.bytes.slice(startChar, highlightPosition.index))
                 .replace(this.betweenRtTag_htmlTag, "").trim(),
-            after: this.utfDecoder.decode(this.book.bytes.slice(highlightPosition.index + highlightPosition.length, endDot))
+            after: this.utfDecoder
+                .decode(this.book.bytes.slice(highlightPosition.index + highlightPosition.length, endChar))
                 .replace(this.betweenRtTag_htmlTag, "").trim()
         }
     }
 
+    private splitSentences(input: string): string[] {
+        const sentences: string[] = [];
+        let i = -1;
+        let sentenceStart = 0;
+        while (++i < input.length) {
+            if (this.FULL_STOPS.includes(input[i])) {
+                sentences.push(input.substring(sentenceStart, i + 1));
+                sentenceStart = i + 1;
+            }
+        }
+        return sentences;
+    }
     setSurroundings(highlights: Clipping[], sentencesNumber: number = 1) {
         _.sortBy(highlights, ["location.start"]).forEach(highlight => {
             const bytePosition = this.findHighlightByteIndex(highlight);
             if (bytePosition != null) {
-                highlight.surrounding = highlight.surrounding || [];
-                highlight.surrounding[sentencesNumber] = this.surroundingSentences(bytePosition, sentencesNumber);
+                const surroundingContent = this.surroundingSentences(bytePosition, sentencesNumber);
+                const before = this.splitSentences(surroundingContent.before);
+                const after = this.splitSentences(surroundingContent.after);
+                highlight.surrounding = {before, after};
             }
         })
     }
@@ -152,8 +197,8 @@ interface HighlightBytePosition {
 }
 
 export interface SurroundingContent {
-    before: string;
-    after: string;
+    before: string[];
+    after: string[];
 }
 
 

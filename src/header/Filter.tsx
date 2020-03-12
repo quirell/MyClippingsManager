@@ -48,7 +48,6 @@ function Filter(props: Props) {
     const {classes, titles, authors} = props;
     const [filters, setFilters] = React.useState(props.filters);
     const debouncedSetFilters = React.useCallback(_.debounce(props.setFilters, 200), []);
-
     const handleChange = (name: string) => (event: React.ChangeEvent<any>) => {
         const value = event.target.type === "checkbox" ? event.target.checked : event.target.value;
         setFilters({...filters, [name]: value});

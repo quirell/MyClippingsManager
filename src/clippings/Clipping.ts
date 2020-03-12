@@ -26,7 +26,7 @@ export interface Clipping extends Metadata {
     modifiedContent?: string,
     noteIds?: string[],
     notes?: string[],
-    surrounding?: SurroundingContent[],
+    surrounding?: SurroundingContent,
     addedOn: Date,
     id: string,
     deleted?: 0 | 1

@@ -35,32 +35,18 @@ export default function Display(props: Props) {
     const cellMeasurerCache = React.useRef(new CellMeasurerCache({defaultHeight: 144.667, fixedWidth: true}));
     const [forceRerender, setForceRerender] = React.useState(true);
 
-    const refreshView = () => {
+    React.useEffect(() => {
         cellMeasurerCache.current.clearAll();
         // This is only used to force rerender on specific properties change, because otherwise
         // clippings would be rendered in insufficient or abundant space
         setForceRerender(!forceRerender);
-    };
-
-    React.useEffect(() => {
-       refreshView();
-    }, [props.displayOptions]);
+    }, [props.displayOptions, props.clippings]);
 
     const isRowLoaded = ({index} : Index) => {
         return !!props.clippings[index];
     };
 
     const rowCount = () => props.clippings.length;
-
-    const removeNote = async (clipping: Clipping, noteId: string) => {
-        await props.removeNote(clipping, noteId);
-        refreshView();
-    };
-
-    const removeClipping = async(clipping: Clipping) => {
-        await props.removeClipping(clipping);
-        refreshView();
-    };
 
     const renderRow: ListRowRenderer = ({index, key, parent, style}) => {
         const c = props.clippings[index];
@@ -75,8 +61,8 @@ export default function Display(props: Props) {
                 <div style={style} key={key}>
                     <Highlight clipping={c}
                                displayOptions={props.displayOptions}
-                               removeClipping={removeClipping}
-                               removeNote={removeNote}
+                               removeClipping={props.removeClipping}
+                               removeNote={props.removeNote}
                     />
                 </div>
             </CellMeasurer>
@@ -91,10 +77,10 @@ export default function Display(props: Props) {
             minimumBatchSize={50}
             >
             {({ onRowsRendered, registerChild }) => (
-                <WindowScroller ref={scrollerRef}>
+                <WindowScroller>
                     {({height, isScrolling, scrollTop, onChildScroll}) => (
-                        <AutoSizer disableHeight>
-                            {({width}) => (
+                        /*<AutoSizer disableHeight>*/
+                        // {({width}) => (
                                 <List
                                     style={{outline: 0}}
                                     autoHeight
@@ -108,11 +94,12 @@ export default function Display(props: Props) {
                                     rowHeight={cellMeasurerCache.current.rowHeight}
                                     rowRenderer={renderRow}
                                     rowCount={rowCount()}
+                                    estimatedRowSize={144.667}
                                     scrollTop={scrollTop}
-                                    width={width}
+                                    width={document.body.clientWidth}
                                 />
-                            )}
-                        </AutoSizer>
+                        // )}
+                        // </AutoSizer>
                     )}
                 </WindowScroller>)}
         </InfiniteLoader>);

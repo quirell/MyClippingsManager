@@ -110,12 +110,12 @@ function Highlight(props: Props) {
                     <Typography variant={"body2"} className={classes.content}>
                         {displayOptions.surrounding.show && clipping.surrounding &&
                         <span className={classes.surrounding}>
-                            {clipping.surrounding[displayOptions.surrounding.sentencesNumber].before}
+                            {clipping.surrounding.before.slice(0, displayOptions.surrounding.sentencesNumber)}
                         </span>}
                         {clipping.content}
                         {displayOptions.surrounding.show && clipping.surrounding &&
                         <span className={classes.surrounding}>
-                            {clipping.surrounding[displayOptions.surrounding.sentencesNumber].after}
+                            {clipping.surrounding.after.slice(0, displayOptions.surrounding.sentencesNumber)}
                         </span>}
                     </Typography>
                     <IconButton edge={"end"} size={"small"} onClick={() => removeClipping(clipping)}>

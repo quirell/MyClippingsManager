@@ -3,6 +3,12 @@ import {Book} from "./clippings/Clipping";
 class _BookService {
     // TODO
     async convertBook(bookFile: File): Promise<Omit<Book, "locations">> {
+        if (bookFile.type === "text/html")
+            return this.convertHtmlBook(bookFile);
+        return Promise.reject("File Format not yet supported");
+    }
+
+    private convertHtmlBook(bookFile: File): Promise<Omit<Book, "locations">> {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.onload = async () => {
@@ -11,7 +17,6 @@ class _BookService {
             };
             reader.readAsArrayBuffer(bookFile);
         });
-
     }
 }
 

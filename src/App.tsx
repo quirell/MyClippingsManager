@@ -33,7 +33,7 @@ const App: React.FC = () => {
     React.useEffect(() => {
         ClippingsStore.getAllAuthors().then(setAuthors);
         ClippingsStore.getAllTitles().then(setTitles);
-        setAndFilter(filters).then();
+        refreshClippings(filters).then();
         // only on init
     },[]);
 
@@ -62,6 +62,8 @@ const App: React.FC = () => {
         const clippings = await parseClippingsFile(file);
         await ClippingsStore.addAllClippings(clippings);
         await refreshAuthorsAndTitles();
+        // This will refresh view, we need to do it every time new clippings get added
+        refreshClippings(filters).then();
         // // kitchenBook.locations = 18213;
         // kitchenBook.locations = 2190;
         // // kitchenBook.locations = 3451;
@@ -71,6 +73,7 @@ const App: React.FC = () => {
         if (files == null || files.length === 0)
             return;
         for(let file of files){
+            console.log(file.type);
             if(file.type === "text/plain")
                 await handleMyClippings(file);
             else
@@ -87,16 +90,19 @@ const App: React.FC = () => {
     const refreshAuthorsAndTitles = async (): Promise<void> => {
         const updatedAuthors = await ClippingsStore.getAllAuthors();
         const updatedTitles = await ClippingsStore.getAllTitles();
-        const updatedAuthorFilter = filters.author.filter(a => _.includes(updatedAuthors, a));
-        const updatedTitleFilter = filters.book.filter(b => _.includes(updatedTitles, b));
         if (authors.length !== updatedAuthors.length)
             setAuthors(updatedAuthors);
         if (titles.length !== updatedTitles.length)
             setTitles(updatedTitles);
-        if ((filters.author.length !== updatedAuthorFilter.length) || (filters.book.length !== updatedTitleFilter.length)) {
+        // author or book may get removed if all clippings of that belonging to them get deleted
+        const updatedAuthorFilter = filters.author.filter(a => _.includes(updatedAuthors, a));
+        const updatedTitleFilter = filters.book.filter(b => _.includes(updatedTitles, b));
+
+        if ((filters.author.length !== updatedAuthorFilter.length) ||
+            (filters.book.length !== updatedTitleFilter.length)) {
             filters.author = updatedAuthorFilter;
             filters.book = updatedTitleFilter;
-            await setAndFilter({...filters});
+            await refreshClippings({...filters});
         }
     };
 
@@ -107,7 +113,7 @@ const App: React.FC = () => {
         await refreshAuthorsAndTitles();
     };
 
-    const setAndFilter = async (filters: Filters) : Promise<void>=> {
+    const refreshClippings = async (filters: Filters): Promise<void> => {
         setFilters(filters);
         ClippingsStore
             .countClippings(filters)
@@ -151,7 +157,8 @@ const App: React.FC = () => {
                 Select MyClippings File
             </Button>
             <br/>
-            <Header exportClippings={exportClippings} filters={filters} setFilters={setAndFilter} authors={authors} titles={titles}
+            <Header exportClippings={exportClippings} filters={filters} setFilters={refreshClippings} authors={authors}
+                    titles={titles}
                     displayOptions={displayOptions} setDisplayOptions={setDisplayOptions} deleteAllVisible={deleteAllVisible}
                     otherSettings={otherSettings} setOtherSettings={setOtherSettings} />
             <br/>
