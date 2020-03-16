@@ -33,7 +33,7 @@ const App: React.FC = () => {
     React.useEffect(() => {
         ClippingsStore.getAllAuthors().then(setAuthors);
         ClippingsStore.getAllTitles().then(setTitles);
-        refreshClippings(filters).then();
+        refreshClippings(filters)
         // only on init
     },[]);
 
@@ -63,7 +63,7 @@ const App: React.FC = () => {
         await ClippingsStore.addAllClippings(clippings);
         await refreshAuthorsAndTitles();
         // This will refresh view, we need to do it every time new clippings get added
-        refreshClippings(filters).then();
+        refreshClippings(filters)
         // // kitchenBook.locations = 18213;
         // kitchenBook.locations = 2190;
         // // kitchenBook.locations = 3451;
@@ -100,25 +100,21 @@ const App: React.FC = () => {
 
         if ((filters.author.length !== updatedAuthorFilter.length) ||
             (filters.book.length !== updatedTitleFilter.length)) {
-            filters.author = updatedAuthorFilter;
-            filters.book = updatedTitleFilter;
-            await refreshClippings({...filters});
+            refreshClippings({...filters, author: updatedAuthorFilter, book: updatedTitleFilter});
         }
     };
 
     const deleteAllVisible = async() : Promise<void> => {
         await ClippingsStore.deleteClippings(filters);
-        setClippings([]);
-        setClippingsCount(0);
         await refreshAuthorsAndTitles();
     };
 
-    const refreshClippings = async (filters: Filters): Promise<void> => {
-        setFilters(filters);
+    const refreshClippings = (newFilters: Filters): void => {
+        setFilters(newFilters);
         ClippingsStore
-            .countClippings(filters)
+            .countClippings(newFilters)
             .then(setClippingsCount)
-            .then(() => ClippingsStore.getClippings(filters, {startIndex: 0, stopIndex: 30}))
+            .then(() => ClippingsStore.getClippings(newFilters, {startIndex: 0, stopIndex: 30}))
             .then(setClippings);
     };
 

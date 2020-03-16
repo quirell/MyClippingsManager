@@ -31,7 +31,6 @@ interface Props {
 
 export default function Display(props: Props) {
     const listRef: any = React.useRef(null);
-    const scrollerRef = React.useRef(null);
     const cellMeasurerCache = React.useRef(new CellMeasurerCache({defaultHeight: 144.667, fixedWidth: true}));
     const [forceRerender, setForceRerender] = React.useState(true);
 
@@ -79,8 +78,6 @@ export default function Display(props: Props) {
             {({ onRowsRendered, registerChild }) => (
                 <WindowScroller>
                     {({height, isScrolling, scrollTop, onChildScroll}) => (
-                        /*<AutoSizer disableHeight>*/
-                        // {({width}) => (
                                 <List
                                     style={{outline: 0}}
                                     autoHeight
@@ -98,8 +95,6 @@ export default function Display(props: Props) {
                                     scrollTop={scrollTop}
                                     width={document.body.clientWidth}
                                 />
-                        // )}
-                        // </AutoSizer>
                     )}
                 </WindowScroller>)}
         </InfiniteLoader>);
