@@ -1,6 +1,19 @@
 # Kindle Clippings Manager
 
 ![State of the project as of November 2019](myclippingsmanager.png)
+
+## Currently supported features
+- Filter clippings by content, page, location, date, author, title
+- Filter clippings by type: Highlight, Note, Bookmark
+- Edit clippings
+- Show Highlight and Notes from the same location together
+- Export Clippings (naive implementation)
+- Remove all visible clippings
+- Doesn't import already added and later removed clippings
+- Store added clippings in local IndexedDB
+- Import books (in progress, currently supports only html books)
+- Display highlights in context of book (if imported)
+
 ## Goals of this project
 Main goal is to be able to export clippings
 in a format friendly for reviewing foreign languages words on Kindle.
