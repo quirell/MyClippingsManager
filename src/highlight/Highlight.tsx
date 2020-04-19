@@ -13,9 +13,11 @@ import {
     WithStyles,
     withStyles
 } from "@material-ui/core";
-import {Clipping} from "./clippings/Clipping";
+import {Clipping} from "../clippings/Clipping";
 import clsx from "clsx";
-import {DisplayOptions} from "./header/DisplayOptions";
+import {DisplayOptions} from "../header/DisplayOptions";
+import View from "./View";
+import Edit from "./Edit";
 
 const styles = createStyles({
     card: {
@@ -46,6 +48,10 @@ const styles = createStyles({
         padding: 5,
         color: "rgba(0,0,0,0.54)"
     },
+    buttonIcon: {
+        fontSize: 15,
+        padding: 5
+    },
     surrounding: {
         color: "rgba(0,0,0,0.54)"
     },
@@ -62,6 +68,7 @@ const styles = createStyles({
 
 export type RemoveHandler = (clipping: Clipping) => void;
 export type RemoveNoteHandler = (clipping: Clipping, noteId: string) => void;
+export type SaveClippingHandler = (clipping: Clipping) => void;
 
 interface Props extends WithStyles<typeof styles> {
     clipping: Clipping
@@ -69,10 +76,18 @@ interface Props extends WithStyles<typeof styles> {
     displayOptions: DisplayOptions
     removeClipping : RemoveHandler
     removeNote: RemoveNoteHandler
+    saveClipping: SaveClippingHandler
 }
+
+
 
 function Highlight(props: Props) {
     const {clipping, classes, style, displayOptions, removeClipping, removeNote} = props;
+    const [edit, setEdit] = React.useState(false);
+    const saveClipping = (clipping: Clipping) => {
+        props.saveClipping(clipping);
+        setEdit(false);
+    };
     return (
         <Card className={classes.card} style={style}>
             <CardContent>
@@ -107,30 +122,24 @@ function Highlight(props: Props) {
                     </Typography>}
                 </div>
                 <div className={classes.contentContainer}>
-                    <Typography variant={"body2"} className={classes.content}>
-                        {displayOptions.surrounding.show && clipping.surrounding &&
-                        <span className={classes.surrounding}>
-                            {clipping.surrounding.before.slice(0, displayOptions.surrounding.sentencesNumber)}
-                        </span>}
-                        {clipping.content}
-                        {displayOptions.surrounding.show && clipping.surrounding &&
-                        <span className={classes.surrounding}>
-                            {clipping.surrounding.after.slice(0, displayOptions.surrounding.sentencesNumber)}
-                        </span>}
-                    </Typography>
+                    {!edit && <View displayOptions={displayOptions} clipping={clipping}/>}
+                    {edit && <Edit saveClipping={saveClipping} displayOptions={displayOptions} clipping={clipping}/>}
+                    {!edit && <IconButton edge={"end"} size={"small"} onClick={() => setEdit(true)}>
+                        <Icon className={clsx(classes.buttonIcon, "fas fa-edit")}/>
+                    </IconButton>}
                     <IconButton edge={"end"} size={"small"} onClick={() => removeClipping(clipping)}>
-                        <Icon className={"fas fa-trash-alt"}/>
+                        <Icon className={clsx(classes.buttonIcon, "fas fa-trash-alt")}/>
                     </IconButton>
                 </div>
 
                 {displayOptions.showNotesWithHighlightsTogether &&
                 clipping.notes && clipping.notes.length > 0 &&
                 <List className={classes.note} dense>
-                    {clipping.noteIds!.map((id,index) =>
+                    {clipping.noteIds!.map((id, index) =>
                         (<ListItem key={id}>
                             <ListItemText inset primary={clipping.notes![index]}/>
                             <ListItemSecondaryAction>
-                                <IconButton edge={"end"} size={"small"} onClick={() => removeNote(clipping,id)}>
+                                <IconButton edge={"end"} size={"small"} onClick={() => removeNote(clipping, id)}>
                                     <Icon className={"fas fa-trash-alt"}/>
                                 </IconButton>
                             </ListItemSecondaryAction>

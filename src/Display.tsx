@@ -1,21 +1,18 @@
 import React from 'react';
 import "react-table/react-table.css";
-import Highlight, {RemoveHandler, RemoveNoteHandler} from "./Highlight";
+import Highlight, {RemoveHandler, RemoveNoteHandler, SaveClippingHandler} from "./highlight/Highlight";
 import {Clipping} from "./clippings/Clipping";
 import {
-    AutoSizer,
     CellMeasurer,
     CellMeasurerCache,
+    Index,
+    InfiniteLoader,
     List,
     ListRowRenderer,
-    WindowScroller,
-    InfiniteLoader,
-    Index, IndexRange
+    WindowScroller
 } from "react-virtualized";
 import {DisplayOptions} from "./header/DisplayOptions";
-import {Filters} from "./filters/filterClippings";
-import {ClippingsStore, Pagination, removeNoteById} from "./storage/IndexedDbClippingStore";
-import _ from "lodash";
+import {Pagination} from "./storage/IndexedDbClippingStore";
 
 
 type LoadClippingsHandler = (pagination: Pagination) => Promise<void>;
@@ -27,6 +24,7 @@ interface Props {
     removeClipping: RemoveHandler;
     removeNote: RemoveNoteHandler;
     loadClippings: LoadClippingsHandler;
+    saveClipping: SaveClippingHandler;
 }
 
 export default function Display(props: Props) {
@@ -62,6 +60,7 @@ export default function Display(props: Props) {
                                displayOptions={props.displayOptions}
                                removeClipping={props.removeClipping}
                                removeNote={props.removeNote}
+                               saveClipping={props.saveClipping}
                     />
                 </div>
             </CellMeasurer>

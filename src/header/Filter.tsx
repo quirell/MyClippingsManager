@@ -1,15 +1,4 @@
-import {
-    Checkbox,
-    createStyles,
-    FormControl,
-    Icon,
-    InputLabel,
-    MenuItem,
-    Select,
-    TextField,
-    WithStyles,
-    withStyles
-} from "@material-ui/core";
+import {Checkbox, createStyles, FormControl, Icon, TextField, WithStyles, withStyles} from "@material-ui/core";
 import React from "react";
 import DateFnsUtils from "@date-io/date-fns";
 import {DatePicker, MuiPickersUtilsProvider} from "@material-ui/pickers";
@@ -17,6 +6,7 @@ import {Autocomplete} from '@material-ui/lab';
 import _ from "lodash";
 import Tooltip from "./HideOnFocusTooltip";
 import {Filters} from "../filters/filterClippings";
+
 const styles = createStyles({
     textField: {
         margin: "-22px 9px 0 9px",
@@ -52,7 +42,7 @@ function Filter(props: Props) {
     const [filters, setFilters] = React.useState(props.filters);
     const debouncedSetFilters = React.useCallback(_.debounce(props.setFilters, 200), []);
     const handleChange = (name: string) => (event: React.ChangeEvent<any>, value?: any) => {
-        value = value || event.target.value;
+        value = event.target.type === "checkbox" ? event.target.checked : value || event.target.value;
         setFilters({...filters, [name]: value});
         debouncedSetFilters({...filters, [name]: value});
     };

@@ -1,17 +1,16 @@
 import React, {ChangeEvent} from 'react';
 import './App.css';
 import Display from "./Display";
-import {Book, Clipping, Type} from "./clippings/Clipping";
+import {Book, Clipping} from "./clippings/Clipping";
 import {parseClippingsFile} from "./clippings/ClippingsFIleParser";
 import {Button} from "@material-ui/core";
 import {defaultFilters, Filters} from "./filters/filterClippings";
-import {getBookContent1, HighlightLocationMatcher} from "./clippings/HighlightLocationMatcher";
+import {HighlightLocationMatcher} from "./clippings/HighlightLocationMatcher";
 import {defaultDisplayOptions, DisplayOptions} from "./header/DisplayOptions";
 import Header from "./header/Header";
 import {ClippingsRenderer} from "./export/renderer/ClippingsRenderer";
 import {defaultOtherSettings, OtherSettings} from "./header/OtherSettingsView";
 import {ClippingsStore, Pagination, removeNoteById} from "./storage/IndexedDbClippingStore";
-import {IndexRange} from "react-virtualized";
 import _ from "lodash";
 import {BookService} from "./BookService";
 import LocationModal from "./LocationModal";
@@ -146,11 +145,15 @@ const App: React.FC = () => {
         await refreshAuthorsAndTitles();
     };
 
+    const saveClipping = async (clipping: Clipping) => {
+        await ClippingsStore.updateClipping(clipping);
+    };
+
     return (
         <div className="App">
             <input type="file" onChange={fileAdded} ref={openFilePickerRef} accept={"text/plain"} hidden={true}/>
             <Button variant="contained" onClick={() => openFilePickerRef.current.click()}>
-                Select MyClippings File
+                Add MyClippings.txt
             </Button>
             <br/>
             <Header exportClippings={exportClippings} filters={filters} setFilters={refreshClippings} authors={authors}
@@ -159,6 +162,7 @@ const App: React.FC = () => {
                     otherSettings={otherSettings} setOtherSettings={setOtherSettings} />
             <br/>
             <Display displayOptions={displayOptions} clippingsCount={clippingsCount} clippings={clippings}
+                     saveClipping={saveClipping}
                      removeNote={removeNote} removeClipping={removeClipping} loadClippings={loadMoreRows}/>
             <LocationModal open={locationModalOpen}
                            onCancel={() => setLocationModalOpen(false)}
