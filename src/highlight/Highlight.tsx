@@ -96,8 +96,12 @@ function Highlight(props: Props) {
         setEdit(false);
     };
     const group = React.useRef(classes.group_zero);
-    if (displayOptions.groupSimilar && group.current == classes.group_zero) {
-        group.current = SimilarityClassifier.group(clipping) ? classes.group_one : classes.group_two;
+    if (displayOptions.groupSimilar) {
+        if (group.current === classes.group_zero) {
+            group.current = SimilarityClassifier.group(clipping) ? classes.group_one : classes.group_two;
+        }
+    } else {
+        group.current = classes.group_zero;
     }
     return (
         <Card className={clsx(classes.card, group.current)} style={style}>
