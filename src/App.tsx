@@ -34,7 +34,7 @@ const App: React.FC = () => {
         ClippingsStore.getAllTitles().then(setTitles);
         refreshClippings(filters)
         // only on init
-    },[]);
+    }, []);
 
     async function handleBookInternal(locations: number): Promise<void> {
         setLocationModalOpen(false);
@@ -52,12 +52,12 @@ const App: React.FC = () => {
         bookFile.current = null;
     }
 
-    function handleBook(file: File){
+    function handleBook(file: File) {
         setLocationModalOpen(true);
         bookFile.current = file;
     }
 
-    async function handleMyClippings(file: File){
+    async function handleMyClippings(file: File) {
         const clippings = await parseClippingsFile(file);
         await ClippingsStore.addAllClippings(clippings);
         await refreshAuthorsAndTitles();
@@ -67,22 +67,26 @@ const App: React.FC = () => {
         // kitchenBook.locations = 2190;
         // // kitchenBook.locations = 3451;
     }
+
     const fileAdded = async (ev: ChangeEvent<HTMLInputElement>) => {
         const files: (FileList | null) = ev.target.files;
         if (files == null || files.length === 0)
             return;
-        for(let file of files){
+        for (let file of files) {
             console.log(file.type);
-            if(file.type === "text/plain")
+            if (file.type === "text/plain")
                 await handleMyClippings(file);
             else
                 handleBook(file);
         }
     };
 
-    const exportClippings = async () : Promise<void> => {
-        const clippingsToExport = await ClippingsStore.getClippings(filters,{startIndex: 0, stopIndex: Number.MAX_SAFE_INTEGER});
-        const renderer = new ClippingsRenderer(otherSettings.renderOptions,displayOptions,clippingsToExport);
+    const exportClippings = async (): Promise<void> => {
+        const clippingsToExport = await ClippingsStore.getClippings(filters, {
+            startIndex: 0,
+            stopIndex: Number.MAX_SAFE_INTEGER
+        });
+        const renderer = new ClippingsRenderer(otherSettings.renderOptions, displayOptions, clippingsToExport);
         renderer.render();
     };
 
@@ -103,7 +107,7 @@ const App: React.FC = () => {
         }
     };
 
-    const deleteAllVisible = async() : Promise<void> => {
+    const deleteAllVisible = async (): Promise<void> => {
         await ClippingsStore.deleteClippings(filters);
         await refreshAuthorsAndTitles();
     };
@@ -158,8 +162,9 @@ const App: React.FC = () => {
             <br/>
             <Header exportClippings={exportClippings} filters={filters} setFilters={refreshClippings} authors={authors}
                     titles={titles}
-                    displayOptions={displayOptions} setDisplayOptions={setDisplayOptions} deleteAllVisible={deleteAllVisible}
-                    otherSettings={otherSettings} setOtherSettings={setOtherSettings} />
+                    displayOptions={displayOptions} setDisplayOptions={setDisplayOptions}
+                    deleteAllVisible={deleteAllVisible}
+                    otherSettings={otherSettings} setOtherSettings={setOtherSettings}/>
             <br/>
             <Display displayOptions={displayOptions} clippingsCount={clippingsCount} clippings={clippings}
                      saveClipping={saveClipping}

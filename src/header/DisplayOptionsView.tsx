@@ -33,6 +33,16 @@ function DisplayOptionsView(props: Props) {
     };
     return (
         <>
+            <Tooltip title={displayOptions.groupSimilar ?
+                "Consecutive Highlights with similar content marked with a color" :
+                "Consecutive Highlights with similar content are not distinguished"}>
+                <Checkbox
+                    checked={displayOptions.groupSimilar}
+                    onChange={handleChange("groupSimilar")}
+                    icon={<Icon className={"fas fa-clone"}/>}
+                    checkedIcon={<Icon className={"fas fa-clone"}/>}
+                />
+            </Tooltip>
             <Tooltip title={displayOptions.showNotesWithHighlightsTogether ?
                 "Show Highlights and Notes having the same location displayed together" :
                 "Show Highlights and Notes having the same location displayed separately"}>

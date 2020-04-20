@@ -14,7 +14,8 @@ class ClippingStart implements ClippingTip {
     }
 
     readonly isEnd = false;
-    isNote : boolean;
+    isNote: boolean;
+
     constructor(public clipping: Clipping) {
         this.isNote = clipping.type === Type.note;
     }
@@ -26,21 +27,22 @@ class ClippingEnd implements ClippingTip {
     }
 
     readonly isEnd = true;
-    isNote : boolean;
+    isNote: boolean;
+
     constructor(public clipping: Clipping) {
         this.isNote = clipping.type === Type.note;
     }
 }
 
 
-function AddNotesToClippings(clippings: Clipping[]){
+function AddNotesToClippings(clippings: Clipping[]) {
     const byBook = _.groupBy(clippings, c => c.title + c.author);
     //if one clipping in a book has a location then all have it
     const byBookWithLocation = _.pickBy(byBook, clippings => clippings[0].location !== undefined);
     for (let byBookWithLocationKey in byBookWithLocation) {
 
     }
-    _.forEach(byBookWithLocation,book => {
+    _.forEach(byBookWithLocation, book => {
         joinNoteWithHighlightByLocation(book)
     })
 }
@@ -60,11 +62,11 @@ export function joinNoteWithHighlightByLocation(clippings: Clipping[]): Set<Clip
                     highlights.delete(tip.clipping);
             } else if (tip.clipping.type === Type.note) {
                 highlights.forEach(h => {
-                    if(!h.noteIds){
-                        h.noteIds =  [tip.clipping.id];
+                    if (!h.noteIds) {
+                        h.noteIds = [tip.clipping.id];
                         h.notes = [tip.clipping.content];
                         updated.add(h);
-                    } else if(!h.noteIds!.find(id => id === tip.clipping.id)){
+                    } else if (!h.noteIds!.find(id => id === tip.clipping.id)) {
                         h.noteIds!.push(tip.clipping.id);
                         h.notes!.push(tip.clipping.content);
                         updated.add(h);

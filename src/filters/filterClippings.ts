@@ -1,6 +1,5 @@
-import {Book, Clipping, Type} from "../clippings/Clipping";
+import {Clipping, Type} from "../clippings/Clipping";
 import {isAfter, isBefore} from "date-fns";
-import {act} from "react-dom/test-utils";
 
 export interface Filters {
     note: boolean
@@ -22,7 +21,7 @@ class Filter {
 }
 
 const filterList = [
-    new Filter(f => true,f => !f.deleted),
+    new Filter(f => true, f => !f.deleted),
     new Filter(f => !(f.note && f.highlight && f.bookmark), (c, f) =>
         f.highlight && c.type === Type.highlight ||
         f.note && c.type === Type.note ||
@@ -62,11 +61,12 @@ export function filterClippings(clippings: Clipping[], filters: Filters): Clippi
 }
 
 export type ClippingFilter = (clipping: Clipping) => boolean;
-export function createClippingFilter(filters: Filters) : ClippingFilter {
+
+export function createClippingFilter(filters: Filters): ClippingFilter {
     const activeFilters = filterList.filter(f => f.active(filters));
     return (clipping: Clipping) => {
         for (let activeFilter of activeFilters) {
-            if(!activeFilter.execute(clipping,filters))
+            if (!activeFilter.execute(clipping, filters))
                 return false;
         }
         return true;

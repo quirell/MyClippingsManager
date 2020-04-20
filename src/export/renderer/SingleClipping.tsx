@@ -7,15 +7,15 @@ interface SingleClippingProps {
     displayOptions: DisplayOptions
 }
 
-export default function SingleClipping({clipping,displayOptions}: SingleClippingProps){
-    const { surrounding, showNotesWithHighlightsTogether } = displayOptions;
+export default function SingleClipping({clipping, displayOptions}: SingleClippingProps) {
+    const {surrounding, showNotesWithHighlightsTogether} = displayOptions;
     return (
         <>
             <p>{clipping.content}</p>
-            { showNotesWithHighlightsTogether && clipping.notes &&
-                <li>
-                    {clipping.notes.map((note) => (<ul><i>{note}</i></ul>))}
-                </li>
+            {showNotesWithHighlightsTogether && clipping.notes &&
+            <li>
+                {clipping.notes.map((note) => (<ul><i>{note}</i></ul>))}
+            </li>
             }
             <br/>
         </>

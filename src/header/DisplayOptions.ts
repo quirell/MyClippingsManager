@@ -4,6 +4,7 @@ export interface DisplayOptions {
         sentencesNumber: number
     }
     showNotesWithHighlightsTogether: boolean;
+    groupSimilar: boolean;
 }
 
 export const defaultDisplayOptions: DisplayOptions = {
@@ -11,6 +12,7 @@ export const defaultDisplayOptions: DisplayOptions = {
         show: false,
         sentencesNumber: 1
     },
-    showNotesWithHighlightsTogether: false
+    showNotesWithHighlightsTogether: false,
+    groupSimilar: false
 };
 

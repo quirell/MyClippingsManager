@@ -1,5 +1,4 @@
 import {Card, createStyles, withStyles, WithStyles} from "@material-ui/core";
-import {Book} from "../clippings/Clipping";
 import {Filters} from "../filters/filterClippings";
 import React from "react";
 import {DisplayOptions} from "./DisplayOptions";
@@ -36,11 +35,13 @@ interface Props extends WithStyles<typeof styles> {
 function Header(props: Props) {
     return (
         <Card className={props.classes.card}>
-            <OtherSettingsView deleteAllVisible={props.deleteAllVisible} exportClippings={props.exportClippings} otherSettings={props.otherSettings} setOtherSettings={props.setOtherSettings}/>
+            <OtherSettingsView deleteAllVisible={props.deleteAllVisible} exportClippings={props.exportClippings}
+                               otherSettings={props.otherSettings} setOtherSettings={props.setOtherSettings}/>
             <Divider orientation={"vertical"}/>
             <DisplayOptionsView displayOptions={props.displayOptions} setDisplayOptions={props.setDisplayOptions}/>
             <Divider orientation={"vertical"}/>
-            <Filter titles={props.titles} authors={props.authors} filters={props.filters} setFilters={props.setFilters}/>
+            <Filter titles={props.titles} authors={props.authors} filters={props.filters}
+                    setFilters={props.setFilters}/>
         </Card>)
 }
 

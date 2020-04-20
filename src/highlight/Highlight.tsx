@@ -18,6 +18,7 @@ import clsx from "clsx";
 import {DisplayOptions} from "../header/DisplayOptions";
 import View from "./View";
 import Edit from "./Edit";
+import {SimilarityClassifier} from "../clippings/SimilarityClassifier";
 
 const styles = createStyles({
     card: {
@@ -63,6 +64,13 @@ const styles = createStyles({
     note: {
         marginTop: 10,
         // marginLeft: 40
+    },
+    group_zero: {},
+    group_one: {
+        backgroundColor: "rgba(245,0,87, 0.6)"
+    },
+    group_two: {
+        backgroundColor: "rgba(63,81,181, 0.6)"
     }
 });
 
@@ -74,11 +82,10 @@ interface Props extends WithStyles<typeof styles> {
     clipping: Clipping
     style?: any
     displayOptions: DisplayOptions
-    removeClipping : RemoveHandler
+    removeClipping: RemoveHandler
     removeNote: RemoveNoteHandler
     saveClipping: SaveClippingHandler
 }
-
 
 
 function Highlight(props: Props) {
@@ -88,8 +95,12 @@ function Highlight(props: Props) {
         props.saveClipping(clipping);
         setEdit(false);
     };
+    const group = React.useRef(classes.group_zero);
+    if (displayOptions.groupSimilar && group.current == classes.group_zero) {
+        group.current = SimilarityClassifier.group(clipping) ? classes.group_one : classes.group_two;
+    }
     return (
-        <Card className={classes.card} style={style}>
+        <Card className={clsx(classes.card, group.current)} style={style}>
             <CardContent>
                 <div className={classes.header}>
                     <Typography className={classes.typography} variant={"h5"}> <Icon component={"i"}
@@ -109,7 +120,7 @@ function Highlight(props: Props) {
                     </Typography>
                 </div>
                 <div className={classes.header}>
-                    <Typography className={classes.typography} variant={"overline"}><Icon
+                    <Typography className={clsx(classes.typography)} variant={"overline"}><Icon
                         className={clsx(classes.icon, 'fas fa-portrait')}/>{clipping.author}</Typography>
                     {clipping.page &&
                     <Typography className={classes.typography} variant={"caption"}><Icon

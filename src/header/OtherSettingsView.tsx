@@ -1,9 +1,8 @@
-import {Button, Checkbox, createStyles, Icon, withStyles, WithStyles} from "@material-ui/core";
+import {Button, createStyles, Icon, withStyles, WithStyles} from "@material-ui/core";
 import React from "react";
 import _ from "lodash";
-import {ClippingsRenderer, RenderOptions} from "../export/renderer/ClippingsRenderer";
+import {RenderOptions} from "../export/renderer/ClippingsRenderer";
 import ExportButton from "../export/ExportButton";
-import {DisplayOptions} from "./DisplayOptions";
 import Tooltip from "@material-ui/core/Tooltip";
 
 const styles = createStyles({
@@ -19,7 +18,7 @@ export interface OtherSettings {
     renderOptions: RenderOptions,
 }
 
-export const defaultOtherSettings : OtherSettings = {
+export const defaultOtherSettings: OtherSettings = {
     renderOptions: {
         name: "Clippings Export.txt",
         clippingsPerPage: 10
@@ -42,11 +41,11 @@ function OtherSettingsView(props: Props) {
 
     return (
         <>
-          <ExportButton
-              renderOptions={otherSettings.renderOptions}
+            <ExportButton
+                renderOptions={otherSettings.renderOptions}
 
-              setRenderOptions={(renderOptions) => handleChange("renderOptions",renderOptions)}
-              export={exportClippings}/>
+                setRenderOptions={(renderOptions) => handleChange("renderOptions", renderOptions)}
+                export={exportClippings}/>
             <Tooltip
                 title={"Delete all currently filtered clippings"}>
                 <Button onClick={props.deleteAllVisible} className={classes.button}>

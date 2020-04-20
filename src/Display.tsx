@@ -39,7 +39,7 @@ export default function Display(props: Props) {
         setForceRerender(!forceRerender);
     }, [props.displayOptions, props.clippings]);
 
-    const isRowLoaded = ({index} : Index) => {
+    const isRowLoaded = ({index}: Index) => {
         return !!props.clippings[index];
     };
 
@@ -47,6 +47,7 @@ export default function Display(props: Props) {
 
     const renderRow: ListRowRenderer = ({index, key, parent, style}) => {
         const c = props.clippings[index];
+
         return (
             <CellMeasurer
                 cache={cellMeasurerCache.current}
@@ -73,27 +74,27 @@ export default function Display(props: Props) {
             loadMoreRows={props.loadClippings}
             rowCount={props.clippingsCount}
             minimumBatchSize={50}
-            >
-            {({ onRowsRendered, registerChild }) => (
+        >
+            {({onRowsRendered, registerChild}) => (
                 <WindowScroller>
                     {({height, isScrolling, scrollTop, onChildScroll}) => (
-                                <List
-                                    style={{outline: 0}}
-                                    autoHeight
-                                    deferredMeasurementCache={cellMeasurerCache.current}
-                                    height={height}
-                                    isScrolling={isScrolling}
-                                    onScroll={onChildScroll}
-                                    onRowsRendered={onRowsRendered}
-                                    overscanRowCount={10}
-                                    ref={registerChild}
-                                    rowHeight={cellMeasurerCache.current.rowHeight}
-                                    rowRenderer={renderRow}
-                                    rowCount={rowCount()}
-                                    estimatedRowSize={144.667}
-                                    scrollTop={scrollTop}
-                                    width={document.body.clientWidth}
-                                />
+                        <List
+                            style={{outline: 0}}
+                            autoHeight
+                            deferredMeasurementCache={cellMeasurerCache.current}
+                            height={height}
+                            isScrolling={isScrolling}
+                            onScroll={onChildScroll}
+                            onRowsRendered={onRowsRendered}
+                            overscanRowCount={10}
+                            ref={registerChild}
+                            rowHeight={cellMeasurerCache.current.rowHeight}
+                            rowRenderer={renderRow}
+                            rowCount={rowCount()}
+                            estimatedRowSize={144.667}
+                            scrollTop={scrollTop}
+                            width={document.body.clientWidth}
+                        />
                     )}
                 </WindowScroller>)}
         </InfiniteLoader>);

@@ -177,6 +177,7 @@ export class HighlightLocationMatcher {
         }
         return sentences;
     }
+
     setSurroundings(highlights: Clipping[], sentencesNumber: number = 1) {
         _.sortBy(highlights, ["location.start"]).forEach(highlight => {
             const bytePosition = this.findHighlightByteIndex(highlight);
