@@ -4,6 +4,7 @@ import {Book} from "../clippings/Clipping";
 interface BookStore {
     addBook: (book: Book) => Promise<void>
     getBook: (title: string) => Promise<Book | undefined>
+    getAllTitles: () => Promise<string[]>
 }
 
 class IndexedDbBookStore implements BookStore {
@@ -24,6 +25,10 @@ class IndexedDbBookStore implements BookStore {
 
     async getBook(title: string): Promise<Book | undefined> {
         return this.db.books.get(title);
+    }
+
+    async getAllTitles(): Promise<string[]> {
+        return this.db.books.toCollection().primaryKeys()
     }
 }
 

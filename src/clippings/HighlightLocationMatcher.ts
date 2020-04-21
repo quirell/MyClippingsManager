@@ -201,20 +201,3 @@ export interface SurroundingContent {
     before: string[];
     after: string[];
 }
-
-
-export async function getBookContent1() {
-    const axiosResponse = await axios.get<ArrayBuffer>('test.html', {
-        responseType: "arraybuffer"
-    });
-    return axiosResponse.data;
-}
-
-async function getBookContent(file: File) {
-    const formData = new FormData();
-    formData.append("file", file);
-    const axiosResponse = await axios.post<string>('bookcontent', formData, {
-        responseType: "arraybuffer"
-    });
-    return axiosResponse.data;
-}

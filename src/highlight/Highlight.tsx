@@ -155,7 +155,7 @@ function Highlight(props: Props) {
                             <ListItemText inset primary={clipping.notes![index]}/>
                             <ListItemSecondaryAction>
                                 <IconButton edge={"end"} size={"small"} onClick={() => removeNote(clipping, id)}>
-                                    <Icon className={"fas fa-trash-alt"}/>
+                                    <Icon className={clsx(classes.buttonIcon, "fas fa-trash-alt")}/>
                                 </IconButton>
                             </ListItemSecondaryAction>
                         </ListItem>))}

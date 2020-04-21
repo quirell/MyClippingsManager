@@ -56,9 +56,7 @@ class _SimilarityClassifier {
                     cur[j] = 0;
                 }
             }
-            const temp = prev;
-            prev = cur;
-            cur = temp;
+            [prev, cur] = [cur, prev];
         }
         return max;
     }

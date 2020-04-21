@@ -1,8 +1,10 @@
 import {Clipping, Type} from "../clippings/Clipping";
 import Dexie from "dexie";
-import _ from "lodash"
+import _, {Dictionary} from "lodash"
 import {createClippingFilter, Filters} from "../filters/filterClippings";
 import {joinNoteWithHighlightByLocation} from "../clippings/HighlightNoteMatcher";
+import {BookStore} from "./IndexedDbBookStore";
+import {HighlightLocationMatcher} from "../clippings/HighlightLocationMatcher";
 
 export interface ClippingsStore {
     /**
@@ -92,8 +94,21 @@ class IndexedDbClippingStore implements ClippingsStore {
             await this.db.clippings.bulkPut(highlightsToUpdate);
             return highlightsToUpdate;
         }
-        return []
+        return [];
     }
+
+    private async assignSurroundings(clippingsByBook: Partial<Dictionary<Clipping[]>>) {
+        const allTitles = new Set(await BookStore.getAllTitles());
+        for (const [title, clippings] of Object.entries(clippingsByBook)) {
+            if (!allTitles.has(title))
+                continue;
+            const highlights = clippings!.filter(clipping => clipping.type)
+            const book = (await BookStore.getBook(title))!;
+            const highlightLocationMatcher = new HighlightLocationMatcher(book);
+            highlightLocationMatcher.setSurroundings(highlights, 3);
+        }
+    }
+
 
     async addAllClippings(clippings: Clipping[]): Promise<void> {
         const rawKeys = await this.db.clippings.toCollection().primaryKeys();
@@ -103,6 +118,7 @@ class IndexedDbClippingStore implements ClippingsStore {
             .groupBy("title")
             .pickBy(clippings => clippings[0].location !== undefined)
             .value();
+        await this.assignSurroundings(clippingsByBook);
         let updatedClippings: Array<Clipping> = [];
         for (let book in clippingsByBook) {
             const bookClippings = clippingsByBook[book]!;

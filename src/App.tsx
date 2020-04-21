@@ -59,6 +59,7 @@ const App: React.FC = () => {
 
     async function handleMyClippings(file: File) {
         const clippings = await parseClippingsFile(file);
+
         await ClippingsStore.addAllClippings(clippings);
         await refreshAuthorsAndTitles();
         // This will refresh view, we need to do it every time new clippings get added
@@ -157,7 +158,7 @@ const App: React.FC = () => {
         <div className="App">
             <input type="file" onChange={fileAdded} ref={openFilePickerRef} accept={"text/plain"} hidden={true}/>
             <Button variant="contained" onClick={() => openFilePickerRef.current.click()}>
-                Add MyClippings.txt
+                Add MyClippings.txt / Book.html
             </Button>
             <br/>
             <Header exportClippings={exportClippings} filters={filters} setFilters={refreshClippings} authors={authors}
