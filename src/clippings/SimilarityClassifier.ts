@@ -1,35 +1,37 @@
-import {Clipping, Type} from "./Clipping";
+import {Clipping} from "./Clipping";
+
+type PartialClipping = Pick<Clipping, "location" | "title" | "content">;
 
 /**
  * Stateful component that tells if consecutive clippings are similar
  */
 class _SimilarityClassifier {
 
-    private previous: Clipping = {
-        addedOn: new Date(),
-        content: "",
-        date: new Date(),
-        id: "1",
-        title: "",
-        type: Type.highlight
-    }
-    private previousGroup = false;
+    private prev: PartialClipping = {title: "", content: ""};
+    private prevGroup = false;
 
-    /**
-     * Returns the same value as for last call if the clippings are similar or opposite value if not
-     */
-    group(clipping: Clipping): boolean {
-        const overlap = _SimilarityClassifier.overlapByLocationAndContent(this.previous, clipping);
-        this.previous = clipping;
-        if (!overlap)
-            this.previousGroup = !this.previousGroup;
-        return this.previousGroup;
+    private cache = new Map<PartialClipping, boolean>()
+
+    getGroup(clipping: PartialClipping): boolean {
+        const group = this.cache.get(clipping);
+        if (group !== undefined)
+            return group;
+        this.prevGroup = this.prevGroup === this.overlapByLocationAndContent(this.prev, clipping);
+        this.cache.set(clipping, this.prevGroup);
+        this.prev = clipping;
+        return this.prevGroup;
+    }
+
+    clearCache() {
+        this.prev = {title: "", content: ""};
+        this.prevGroup = false;
+        this.cache.clear();
     }
 
     /**
      * Returns true if both clippings have overlapping content and location
      */
-    static overlapByLocationAndContent(c1: Clipping, c2: Clipping): boolean {
+    private overlapByLocationAndContent(c1: PartialClipping, c2: PartialClipping): boolean {
         if (!c1.location || !c2.location)
             return false;
         if (c1.title !== c2.title)

@@ -65,11 +65,11 @@ const styles = createStyles({
         marginTop: 10,
         // marginLeft: 40
     },
-    group_zero: {},
-    group_one: {
+    similarity_default: {},
+    similarity_one: {
         backgroundColor: "rgba(245,0,87, 0.6)"
     },
-    group_two: {
+    similarity_two: {
         backgroundColor: "rgba(63,81,181, 0.6)"
     }
 });
@@ -95,16 +95,13 @@ function Highlight(props: Props) {
         props.saveClipping(clipping);
         setEdit(false);
     };
-    const group = React.useRef(classes.group_zero);
+    let similarityClass = classes.similarity_default;
     if (displayOptions.groupSimilar) {
-        if (group.current === classes.group_zero) {
-            group.current = SimilarityClassifier.group(clipping) ? classes.group_one : classes.group_two;
-        }
-    } else {
-        group.current = classes.group_zero;
+        similarityClass = SimilarityClassifier.getGroup(clipping) ? classes.similarity_one : classes.similarity_two;
     }
+
     return (
-        <Card className={clsx(classes.card, group.current)} style={style}>
+        <Card className={clsx(classes.card, similarityClass)} style={style}>
             <CardContent>
                 <div className={classes.header}>
                     <Typography className={classes.typography} variant={"h5"}> <Icon component={"i"}

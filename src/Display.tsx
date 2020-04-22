@@ -13,6 +13,7 @@ import {
 } from "react-virtualized";
 import {DisplayOptions} from "./header/DisplayOptions";
 import {Pagination} from "./storage/IndexedDbClippingStore";
+import {SimilarityClassifier} from "./clippings/SimilarityClassifier";
 
 
 type LoadClippingsHandler = (pagination: Pagination) => Promise<void>;
@@ -34,6 +35,7 @@ export default function Display(props: Props) {
 
     React.useEffect(() => {
         cellMeasurerCache.current.clearAll();
+        SimilarityClassifier.clearCache();
         // This is only used to force rerender on specific properties change, because otherwise
         // clippings would be rendered in insufficient or abundant space
         setForceRerender(!forceRerender);
@@ -44,10 +46,8 @@ export default function Display(props: Props) {
     };
 
     const rowCount = () => props.clippings.length;
-
     const renderRow: ListRowRenderer = ({index, key, parent, style}) => {
         const c = props.clippings[index];
-
         return (
             <CellMeasurer
                 cache={cellMeasurerCache.current}
