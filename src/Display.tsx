@@ -39,7 +39,7 @@ export default function Display(props: Props) {
         // This is only used to force rerender on specific properties change, because otherwise
         // clippings would be rendered in insufficient or abundant space
         setForceRerender(!forceRerender);
-    }, [props.displayOptions, props.clippings]);
+    }, [props.displayOptions, props.clippingsCount]);
 
     const isRowLoaded = ({index}: Index) => {
         return !!props.clippings[index];

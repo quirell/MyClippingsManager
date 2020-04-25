@@ -4,6 +4,7 @@ import _ from "lodash";
 import {RenderOptions} from "../export/renderer/ClippingsRenderer";
 import ExportButton from "../export/ExportButton";
 import Tooltip from "@material-ui/core/Tooltip";
+import BooksButton from "../books/BooksButton";
 
 const styles = createStyles({
     export: {
@@ -41,6 +42,7 @@ function OtherSettingsView(props: Props) {
 
     return (
         <>
+            <BooksButton/>
             <ExportButton
                 renderOptions={otherSettings.renderOptions}
 
@@ -52,7 +54,6 @@ function OtherSettingsView(props: Props) {
                     <Icon className={"fas fa-trash-alt"}/>
                 </Button>
             </Tooltip>
-
         </>
     )
 }

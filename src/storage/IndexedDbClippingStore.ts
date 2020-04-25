@@ -33,6 +33,8 @@ export interface ClippingsStore {
     getAllAuthors(): Promise<string[]>
 
     getAllTitles(): Promise<string[]>
+
+    getCountByTitle(title: string, deleted?: boolean): Promise<number>
 }
 
 export interface Pagination {
@@ -164,26 +166,17 @@ class IndexedDbClippingStore implements ClippingsStore {
             .uniqueKeys() as any[];
         return keys.map(key => key[1])
     }
+
+    async getCountByTitle(title: string, deleted = false): Promise<number> {
+        return this.db.clippings
+            .where("[deleted+title]")
+            .equals([Number(deleted), title]).count()
+    }
+
 }
 
 export const ClippingsStore: ClippingsStore = new IndexedDbClippingStore();
 
-function uniqueClippings(existingClippings: Clipping[], newClippings: Clipping[]): Clipping[] {
-    return _.uniqWith([...existingClippings, ...newClippings], clippingsEqual)
-}
-
-function clippingsEqual(clipping1: Clipping, clipping2: Clipping) {
-    return clipping1.title === clipping2.title &&
-        clipping1.author === clipping2.author &&
-        clipping1.date.getTime() === clipping2.date.getTime() &&
-        (
-            clipping1.location && clipping2.location &&
-            (clipping1.location!.start === clipping2.location!.start &&
-                clipping1.location!.end === clipping2.location!.end)
-        ) ||
-        clipping1.type === clipping2.type &&
-        clipping1.content.valueOf() === clipping2.content.valueOf()
-}
 
 export function removeNoteById(clipping: Clipping, noteIdsToRemove: Set<string>) {
     const indexToDelete = clipping.noteIds!.findIndex(noteId => noteIdsToRemove.has(noteId));
