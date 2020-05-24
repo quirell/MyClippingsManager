@@ -9,19 +9,41 @@ import {HighlightLocationMatcher} from "./clippings/HighlightLocationMatcher";
 import {defaultDisplayOptions, DisplayOptions} from "./header/DisplayOptions";
 import Header from "./header/Header";
 import {ClippingsRenderer} from "./export/renderer/ClippingsRenderer";
-import {defaultOtherSettings, OtherSettings} from "./header/OtherSettingsView";
+import {OtherSettings} from "./header/OtherSettingsView";
 import {ClippingsStore, Pagination, removeNoteById} from "./storage/IndexedDbClippingStore";
 import _ from "lodash";
 import {BookService} from "./BookService";
 import LocationModal from "./LocationModal";
 import {BookStore} from "./storage/IndexedDbBookStore";
+import {EmailConfiguration, EmailService} from "./export/email/EmailService";
+
+function loadOtherSettings(): OtherSettings {
+    const settings = localStorage.getItem("othersettings");
+    if (settings)
+        return JSON.parse(settings);
+    return {
+        renderOptions: {
+            clippingsPerPage: 10,
+            name: "Exported Clippings.txt"
+        },
+        emailConfiguration: {
+            sendToKindleEmail: false,
+            kindleEmail: "my-device-email@kindle.com"
+        }
+    }
+}
+
+function saveOtherSettings(settings: OtherSettings) {
+    localStorage.setItem("othersettings", JSON.stringify(settings));
+}
+
 
 const App: React.FC = () => {
     const openFilePickerRef: any = React.useRef();
 
     const [filters, setFilters] = React.useState<Filters>(defaultFilters);
     const [displayOptions, setDisplayOptions] = React.useState<DisplayOptions>(defaultDisplayOptions);
-    const [otherSettings, setOtherSettings] = React.useState<OtherSettings>(defaultOtherSettings);
+    const [otherSettings, _setOtherSettings] = React.useState<OtherSettings>(loadOtherSettings());
     const [authors, setAuthors] = React.useState<string[]>([]);
     const [titles, setTitles] = React.useState<string[]>([]);
     const [clippings, setClippings] = React.useState<Clipping[]>([]);
@@ -38,7 +60,9 @@ const App: React.FC = () => {
 
     async function handleBookInternal(locations: number): Promise<void> {
         setLocationModalOpen(false);
-        const htmlBook = await BookService.convertBook(bookFile.current!);
+        let htmlBook;
+        htmlBook = await BookService.convertBook(bookFile.current!);
+
         const book: Book = {...htmlBook, locations};
         await BookStore.addBook(book);
         const bookHighlightFilter = {...defaultFilters, book: [book.title], highlight: true};
@@ -74,7 +98,6 @@ const App: React.FC = () => {
         if (files == null || files.length === 0)
             return;
         for (let file of files) {
-            console.log(file.type);
             if (file.type === "text/plain")
                 await handleMyClippings(file);
             else
@@ -88,8 +111,39 @@ const App: React.FC = () => {
             stopIndex: Number.MAX_SAFE_INTEGER
         });
         const renderer = new ClippingsRenderer(otherSettings.renderOptions, displayOptions, clippingsToExport);
-        renderer.render();
+        const contents = renderer.render();
+        let name = otherSettings.renderOptions.name;
+        if (otherSettings.renderOptions.useBookTitle && filters.book.length === 1)
+            name = filters.book[0];
+
+        if (otherSettings.emailConfiguration.sendToKindleEmail) {
+            contents.forEach((content, index) =>
+                sendEmail(content,
+                    `${index}_${name}`,
+                    otherSettings.emailConfiguration));
+        } else {
+            contents.forEach((content, index) =>
+                triggerDownload(content, `${index}_${name}`));
+        }
     };
+
+    const sendEmail = (content: string, name: string, emailConfiguration: EmailConfiguration) => {
+        EmailService
+            .sendClippings(name, content, emailConfiguration)
+            .catch((error) => {
+                alert(error);
+            })
+    }
+
+    const triggerDownload = (content: string, name: string) => {
+        const fileUrl = URL.createObjectURL(new Blob([content]));
+        const downloadLink = document.createElement("a", {});
+        downloadLink.hidden = true;
+        downloadLink.download = name;
+        downloadLink.href = fileUrl;
+        downloadLink.click();
+        downloadLink.remove();
+    }
 
     const refreshAuthorsAndTitles = async (): Promise<void> => {
         const updatedAuthors = await ClippingsStore.getAllAuthors();
@@ -154,11 +208,33 @@ const App: React.FC = () => {
         await ClippingsStore.updateClipping(clipping);
     };
 
+    const setOtherSettings = (otherSettings: OtherSettings) => {
+        if (otherSettings.renderOptions.clippingsPerFile! < 1)
+            otherSettings.renderOptions.clippingsPerFile = 1
+        if (otherSettings.renderOptions.clippingsPerPage! < 1)
+            otherSettings.renderOptions.clippingsPerPage = 1
+        if (!otherSettings.emailConfiguration.kindleEmail.endsWith("@kindle.com")) {
+            const at = otherSettings.emailConfiguration.kindleEmail.indexOf("@")
+            const fixedEmail = otherSettings.emailConfiguration.kindleEmail.substring(0, at);
+            otherSettings.emailConfiguration.kindleEmail = fixedEmail + "@kindle.com"
+        }
+        if (!otherSettings.renderOptions.name) {
+            otherSettings.renderOptions.name = "Exported Clippings.txt"
+        }
+        if (!otherSettings.renderOptions.name!.endsWith(".txt")) {
+            const dot = otherSettings.renderOptions.name.lastIndexOf(".")
+            const fixedName = otherSettings.renderOptions.name.substring(0, dot);
+            otherSettings.renderOptions.name = fixedName + ".txt"
+        }
+        _setOtherSettings(otherSettings);
+        saveOtherSettings(otherSettings);
+    }
+
     return (
         <div className="App">
-            <input type="file" onChange={fileAdded} ref={openFilePickerRef} accept={"text/plain"} hidden={true}/>
+            <input type="file" onChange={fileAdded} ref={openFilePickerRef} hidden={true}/>
             <Button variant="contained" onClick={() => openFilePickerRef.current.click()}>
-                Add MyClippings.txt / Book.html
+                MyClippings.txt / html / azw / azw3
             </Button>
             <br/>
             <Header exportClippings={exportClippings} filters={filters} setFilters={refreshClippings} authors={authors}

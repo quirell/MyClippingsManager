@@ -10,26 +10,30 @@ export interface RenderOptions {
     name?: string,
     clippingsPerPage?: number,
     clippingsPerFile?: number,
+    useBookTitle?: boolean
 }
 
 export class ClippingsRenderer {
     private defaultedOptions: Required<RenderOptions>;
 
-    constructor(options: RenderOptions, private displayOptions: DisplayOptions, private clippings: Clipping[]) {
+    constructor(options: RenderOptions,
+                private displayOptions: DisplayOptions,
+                private clippings: Clipping[]) {
         this.defaultedOptions = {
             name: "exported-clippings.txt",
             clippingsPerPage: 5,
             clippingsPerFile: clippings.length,
+            useBookTitle: false,
             ...options
         };
     }
 
-    render() {
-        _(this.clippings)
+    render(): string[] {
+        return _(this.clippings)
             .chunk(this.defaultedOptions.clippingsPerFile)
             .map(cs => this.renderSingle(cs, this.defaultedOptions, this.displayOptions))
-            .map(content => _.delay(() => this.triggerDownload(content, this.defaultedOptions), 300))
             .value()
+        //_.delay(() => this.triggerDownload(content, this.defaultedOptions), 300)
     }
 
     private renderSingle(clippings: Clipping[], options: Required<RenderOptions>, displayOptions: DisplayOptions) {
@@ -46,16 +50,6 @@ export class ClippingsRenderer {
             )
             .join("");
         return renderToString(<RenderBody content={clippingViews}/>);
-    }
-
-    private triggerDownload(content: string, options: Required<RenderOptions>) {
-        const fileUrl = URL.createObjectURL(new Blob([content]));
-        const downloadLink = document.createElement("a", {});
-        downloadLink.hidden = true;
-        downloadLink.download = options.name;
-        downloadLink.href = fileUrl;
-        downloadLink.click();
-        downloadLink.remove();
     }
 }
 

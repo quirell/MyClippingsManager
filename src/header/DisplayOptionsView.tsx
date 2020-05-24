@@ -16,7 +16,7 @@ import {DisplayOptions} from "./DisplayOptions";
 
 const styles = createStyles({
     select: {
-        margin: "-22px 9px 0 9px",
+        // margin: "-22px 9px 0 9px",
     },
 });
 

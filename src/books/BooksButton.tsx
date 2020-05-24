@@ -1,5 +1,5 @@
 import React from 'react';
-import {Button, createStyles, Icon, withStyles} from "@material-ui/core";
+import {createStyles, Icon, IconButton, withStyles} from "@material-ui/core";
 import Tooltip from "@material-ui/core/Tooltip";
 import {WithStyles} from "@material-ui/core/styles/withStyles";
 import BooksModal from "./BooksModal";
@@ -13,7 +13,7 @@ const styles = createStyles({
         padding: "20px"
     },
     button: {
-        opacity: 0.64
+        // opacity: 0.64
     }
 });
 
@@ -30,9 +30,9 @@ function BooksButton(props: Props) {
     return (
         <>
             <Tooltip title={"View Books"}>
-                <Button onClick={() => setOpen(true)} className={props.classes.button}>
+                <IconButton onClick={() => setOpen(true)} className={props.classes.button}>
                     <Icon className="fas fa-book"/>
-                </Button>
+                </IconButton>
             </Tooltip>
             <BooksModal
                 open={open}

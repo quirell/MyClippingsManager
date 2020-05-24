@@ -1,9 +1,10 @@
 import React from 'react';
-import {Button, ButtonGroup, createStyles, Icon, withStyles} from "@material-ui/core";
+import {ButtonGroup, createStyles, Icon, IconButton, withStyles} from "@material-ui/core";
 import ExportModal from "./ExportModal";
 import {RenderOptions} from "./renderer/ClippingsRenderer";
 import Tooltip from "@material-ui/core/Tooltip";
 import {WithStyles} from "@material-ui/core/styles/withStyles";
+import {EmailConfiguration} from "./email/EmailService";
 
 
 const styles = createStyles({
@@ -14,7 +15,7 @@ const styles = createStyles({
         padding: "20px"
     },
     button: {
-        opacity: 0.64
+        minWidth: "20px"
     }
 });
 
@@ -22,6 +23,8 @@ const styles = createStyles({
 interface Props extends WithStyles<typeof styles> {
     renderOptions: RenderOptions
     setRenderOptions: (options: RenderOptions) => void
+    emailConfiguration: EmailConfiguration,
+    setEmailConfiguration: (config: EmailConfiguration) => void
     export: () => void
 }
 
@@ -34,17 +37,19 @@ function ExportButton(props: Props) {
     return (
         <ButtonGroup>
             <Tooltip title={"Export Clippings"}>
-                <Button onClick={props.export} className={props.classes.button}>
+                <IconButton onClick={props.export} className={props.classes.button}>
                     <Icon className="fas fa-file-export"/>
-                </Button>
+                </IconButton>
             </Tooltip>
             <Tooltip title={"Export Settings"}>
-                <Button onClick={() => setOpen(true)} className={props.classes.button} size={"small"}>
-                    <Icon className="fas fa-cog"/>
-                </Button>
+                <IconButton onClick={() => setOpen(true)} className={props.classes.button} size={"small"}>
+                    <Icon className="fas fa-cog" fontSize={"small"}/>
+                </IconButton>
             </Tooltip>
             <ExportModal
                 setRenderOptions={props.setRenderOptions}
+                setEmailConfiguration={props.setEmailConfiguration}
+                emailConfiguration={props.emailConfiguration}
                 open={open}
                 onClose={close}
                 renderOptions={props.renderOptions}/>

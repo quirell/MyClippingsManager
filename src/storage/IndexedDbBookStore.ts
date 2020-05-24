@@ -25,7 +25,7 @@ class IndexedDbBookStore implements BookStore {
     }
 
     async deleteBook(title: string): Promise<void> {
-        return this.db.books.delete("title");
+        return this.db.books.delete(title);
     }
 
     async getBook(title: string): Promise<Book | undefined> {

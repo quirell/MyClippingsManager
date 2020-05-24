@@ -1,30 +1,25 @@
-import {Button, createStyles, Icon, withStyles, WithStyles} from "@material-ui/core";
+import {createStyles, Icon, IconButton, withStyles, WithStyles} from "@material-ui/core";
 import React from "react";
 import _ from "lodash";
 import {RenderOptions} from "../export/renderer/ClippingsRenderer";
 import ExportButton from "../export/ExportButton";
 import Tooltip from "@material-ui/core/Tooltip";
 import BooksButton from "../books/BooksButton";
+import {EmailConfiguration} from "../export/email/EmailService";
 
 const styles = createStyles({
     export: {
-        margin: "-22px 9px 0 9px",
+        // margin: "-22px 9px 0 9px",
     },
     button: {
-        opacity: 0.64
+        // opacity: 0.64
     }
 });
 
 export interface OtherSettings {
-    renderOptions: RenderOptions,
+    renderOptions: RenderOptions
+    emailConfiguration: EmailConfiguration
 }
-
-export const defaultOtherSettings: OtherSettings = {
-    renderOptions: {
-        name: "Clippings Export.txt",
-        clippingsPerPage: 10
-    }
-};
 
 interface Props extends WithStyles<typeof styles> {
     otherSettings: OtherSettings
@@ -32,7 +27,6 @@ interface Props extends WithStyles<typeof styles> {
     exportClippings: () => void
     deleteAllVisible: () => void
 }
-
 
 function OtherSettingsView(props: Props) {
     const {classes, otherSettings, setOtherSettings, exportClippings} = props;
@@ -45,14 +39,15 @@ function OtherSettingsView(props: Props) {
             <BooksButton/>
             <ExportButton
                 renderOptions={otherSettings.renderOptions}
-
+                emailConfiguration={otherSettings.emailConfiguration}
                 setRenderOptions={(renderOptions) => handleChange("renderOptions", renderOptions)}
+                setEmailConfiguration={(emailConfig) => handleChange("emailConfiguration", emailConfig)}
                 export={exportClippings}/>
             <Tooltip
                 title={"Delete all currently filtered clippings"}>
-                <Button onClick={props.deleteAllVisible} className={classes.button}>
+                <IconButton onClick={props.deleteAllVisible} className={classes.button}>
                     <Icon className={"fas fa-trash-alt"}/>
-                </Button>
+                </IconButton>
             </Tooltip>
         </>
     )

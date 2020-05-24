@@ -61,7 +61,7 @@ export class HighlightLocationMatcher {
         let match: RegExpExecArray;
 
         this.whitespace_betweenRtTag_htmlTag.lastIndex = 0;
-        htmlSearchExcerpt += " <guard/>";
+        htmlSearchExcerpt += "g<uard>";
 
         while (startIndexAfterFoundIndex <= foundIndex) {
             match = this.whitespace_betweenRtTag_htmlTag.exec(htmlSearchExcerpt)!;

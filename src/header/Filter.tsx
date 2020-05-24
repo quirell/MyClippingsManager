@@ -9,22 +9,22 @@ import {Filters} from "../filters/filterClippings";
 
 const styles = createStyles({
     textField: {
-        margin: "-22px 9px 0 9px",
+        // margin: "-22px 9px 0 9px",
     },
     pageInput: {
-        margin: "-22px 9px 0 9px",
+        // margin: "-22px 9px 0 9px",
         width: 60,
     },
     locationInput: {
-        margin: "-22px 9px 0 9px",
+        // margin: "-22px 9px 0 9px",
         width: 70,
     },
     multiselect: {
-        margin: "-22px 9px 0 9px",
+        // margin: "-22px 9px 0 9px",
         minWidth: 300
     },
     datePicker: {
-        margin: "-22px 9px 0 9px",
+        // margin: "-22px 9px 0 9px",
         width: 100
     }
 
