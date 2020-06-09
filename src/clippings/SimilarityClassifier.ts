@@ -1,13 +1,13 @@
-import {Clipping} from "./Clipping";
+import {Clipping, Type} from "./Clipping";
 
-type PartialClipping = Pick<Clipping, "location" | "title" | "content" | "id">;
+type PartialClipping = Pick<Clipping, "location" | "title" | "content" | "id" | "type">;
 
 /**
  * Stateful component that tells if consecutive clippings are similar
  */
 class _SimilarityClassifier {
 
-    private prev: PartialClipping = {id: "", title: "", content: ""};
+    private prev: PartialClipping = {id: "", title: "", content: "", type: Type.highlight};
     private prevGroup = false;
 
     private cache = new Map<string, boolean>()
@@ -16,14 +16,17 @@ class _SimilarityClassifier {
         const group = this.cache.get(clipping.id);
         if (group !== undefined)
             return group;
-        this.prevGroup = this.prevGroup === this.overlapByLocationAndContent(this.prev, clipping);
+        if (clipping.type !== Type.highlight)
+            this.prevGroup = !this.prevGroup;
+        else
+            this.prevGroup = this.prevGroup === this.overlapByLocationAndContent(this.prev, clipping);
         this.cache.set(clipping.id, this.prevGroup);
         this.prev = clipping;
         return this.prevGroup;
     }
 
     clearCache() {
-        this.prev = {id: "", title: "", content: ""};
+        this.prev = {id: "", title: "", content: "", type: Type.highlight};
         this.prevGroup = false;
         this.cache.clear();
     }

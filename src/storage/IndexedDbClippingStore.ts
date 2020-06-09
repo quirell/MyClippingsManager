@@ -9,8 +9,9 @@ import {HighlightLocationMatcher} from "../clippings/HighlightLocationMatcher";
 export interface ClippingsStore {
     /**
      * Stores clippings and adds new notes to Highlights if any
+     * Returns number of added clippings
      */
-    addAllClippings(clippings: Clipping[]): Promise<void>
+    addAllClippings(clippings: Clipping[]): Promise<number>
 
     getClippings(filters: Filters, page: Pagination): Promise<Clipping[]>
 
@@ -112,7 +113,7 @@ class IndexedDbClippingStore implements ClippingsStore {
     }
 
 
-    async addAllClippings(clippings: Clipping[]): Promise<void> {
+    async addAllClippings(clippings: Clipping[]): Promise<number> {
         const rawKeys = await this.db.clippings.toCollection().primaryKeys();
         const keys = new Set(rawKeys);
         const newClippings = clippings.filter(c => !keys.has(c.id));
@@ -134,6 +135,7 @@ class IndexedDbClippingStore implements ClippingsStore {
 
         await this.db.clippings.bulkAdd(newClippings);
         await this.db.clippings.bulkPut(updatedClippings);
+        return newClippings.length;
     }
 
     async updateClipping(toUpdate: Clipping): Promise<void> {

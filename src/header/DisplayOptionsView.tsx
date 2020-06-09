@@ -34,8 +34,8 @@ function DisplayOptionsView(props: Props) {
     return (
         <>
             <Tooltip title={displayOptions.groupSimilar ?
-                "Consecutive Highlights with similar content marked with a color" :
-                "Consecutive Highlights with similar content are not distinguished"}>
+                "Highlights with similar content and overlapping location marked with a color" :
+                "Highlights with similar content and overlapping location are not distinguished"}>
                 <Checkbox
                     checked={displayOptions.groupSimilar}
                     onChange={handleChange("groupSimilar")}

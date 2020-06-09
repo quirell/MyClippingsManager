@@ -16,7 +16,7 @@ class _BookService {
             case "azw3":
                 return this.convertEbook(bookFile);
             default:
-                return Promise.reject("File Format not yet supported");
+                throw new Error("File Format not supported");
         }
     }
 
@@ -29,7 +29,7 @@ class _BookService {
             });
     }
 
-    private ebookMediaType(fileName: string): string {
+    ebookMediaType(fileName: string): string {
         switch (this.extension(fileName)) {
             case "mobi":
                 return "application/x-mobipocket-ebook";
@@ -42,7 +42,6 @@ class _BookService {
     }
 
     private async convertEbook(bookFile: File): Promise<Omit<Book, "locations">> {
-//5451
         return axios
             .post<ArrayBuffer>(process.env.REACT_APP_CONVERT_URL, bookFile, {
                 responseType: "arraybuffer",
@@ -57,15 +56,15 @@ class _BookService {
             .catch(error => {
                 console.log(error);
                 if (!error.response)
-                    return "Unknown error";
+                    throw new Error("Unknown error");
                 if (error.response.status === 400) {
-                    return error.response.data
+                    throw new Error(error.response.data);
                 } else if (error.response.status === 404) {
-                    return "Couldn't connect to server";
+                    throw new Error("Couldn't connect to server");
                 } else if (error.response.status === 500) {
-                    return "Unexpected error";
+                    throw new Error("Unexpected error");
                 } else {
-                    return "Unknown error";
+                    throw new Error("Unknown error");
                 }
             });
     }

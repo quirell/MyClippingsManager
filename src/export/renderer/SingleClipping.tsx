@@ -12,7 +12,11 @@ export default function SingleClipping({clipping, displayOptions}: SingleClippin
     return (
         <>
             {surrounding.show && clipping.surrounding && clipping.surrounding.before
-            && <cite>{clipping.surrounding.before.slice(0, surrounding.sentencesNumber)}</cite>
+            && <cite>{clipping.surrounding.before.slice(
+                clipping.surrounding.before.length -
+                Math.min(displayOptions.surrounding.sentencesNumber,
+                    clipping.surrounding.before.length)
+                , clipping.surrounding.before.length)}</cite>
             }
             <h4>{clipping.content}</h4>
             {surrounding.show && clipping.surrounding && clipping.surrounding.after

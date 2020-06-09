@@ -25,11 +25,13 @@ export default withStyles(styles)(function General({renderOptions, setRenderOpti
         setRenderOptions({...renderOptions, [name]: value});
     };
     return (
-        <div className={className}>
+        <form className={className}>
             <TextField
+                disabled={renderOptions.useBookTitle}
                 className={classes.item}
                 label="File Name"
                 onChange={handleChange("name")}
+                placeholder={"exported-clippings.txt"}
                 value={renderOptions.name}/>
             <FormControlLabel
                 className={classes.item}
@@ -38,21 +40,29 @@ export default withStyles(styles)(function General({renderOptions, setRenderOpti
                         onChange={handleChange("useBookTitle")}
                         checked={renderOptions.useBookTitle}/>
                 }
-                label="Use selected book title as a filename"
+                label="Use selected book title as filename"
             />
+            <TextField
+                disabled={!renderOptions.useBookTitle}
+                className={classes.item}
+                label="File Postfix"
+                onChange={handleChange("postfix")}
+                value={renderOptions.postfix}/>
             <TextField
                 className={classes.item}
                 label="Clippings Per Page"
                 onChange={handleChange("clippingsPerPage")}
                 type={"number"}
+                placeholder={"DON'T DIVIDE INTO PAGES"}
                 value={renderOptions.clippingsPerPage}/>
             <TextField
                 className={classes.item}
                 label="Clippings Per File"
                 onChange={handleChange("clippingsPerFile")}
                 type={"number"}
+                placeholder={"ALL"}
                 value={renderOptions.clippingsPerFile}/>
 
-        </div>
+        </form>
     )
 })

@@ -16,6 +16,8 @@ import {BookService} from "./BookService";
 import LocationModal from "./LocationModal";
 import {BookStore} from "./storage/IndexedDbBookStore";
 import {EmailConfiguration, EmailService} from "./export/email/EmailService";
+import Tooltip from "@material-ui/core/Tooltip";
+import {useSnackbar} from "notistack";
 
 function loadOtherSettings(): OtherSettings {
     const settings = localStorage.getItem("othersettings");
@@ -40,7 +42,7 @@ function saveOtherSettings(settings: OtherSettings) {
 
 const App: React.FC = () => {
     const openFilePickerRef: any = React.useRef();
-
+    const {enqueueSnackbar} = useSnackbar();
     const [filters, setFilters] = React.useState<Filters>(defaultFilters);
     const [displayOptions, setDisplayOptions] = React.useState<DisplayOptions>(defaultDisplayOptions);
     const [otherSettings, _setOtherSettings] = React.useState<OtherSettings>(loadOtherSettings());
@@ -61,19 +63,33 @@ const App: React.FC = () => {
     async function handleBookInternal(locations: number): Promise<void> {
         setLocationModalOpen(false);
         let htmlBook;
-        htmlBook = await BookService.convertBook(bookFile.current!);
+        try {
+            htmlBook = await BookService.convertBook(bookFile.current!);
+        } catch (e) {
+            enqueueSnackbar(`Failed to extract html from book ${e.message}`);
+            return;
+        }
 
         const book: Book = {...htmlBook, locations};
-        await BookStore.addBook(book);
         const bookHighlightFilter = {...defaultFilters, book: [book.title], highlight: true};
         const highlights = await ClippingsStore.getClippings(bookHighlightFilter, {
             startIndex: 0,
             stopIndex: Number.MAX_SAFE_INTEGER
         });
         const highlightLocationMatcher = new HighlightLocationMatcher(book);
-        highlightLocationMatcher.setSurroundings(highlights, 3);
+        let matchedHighlightsCount;
+        try {
+            matchedHighlightsCount = highlightLocationMatcher.setSurroundings(highlights, 3);
+        } catch (e) {
+            enqueueSnackbar("Error processing book," +
+                " maybe book doesn't match the one you read or the number of locations doesn't match ?");
+            return;
+        }
+        await BookStore.addBook(book);
         await ClippingsStore.updateClippings(highlights);
         bookFile.current = null;
+        enqueueSnackbar(`Surrounding sentences found for
+         ${matchedHighlightsCount}/${highlights.length} from book: ${book.title}`);
     }
 
     function handleBook(file: File) {
@@ -82,27 +98,41 @@ const App: React.FC = () => {
     }
 
     async function handleMyClippings(file: File) {
-        const clippings = await parseClippingsFile(file);
+        let clippings: Clipping[];
+        try {
+            clippings = await parseClippingsFile(file);
+        } catch (e) {
+            enqueueSnackbar(`Failed to process clippings file ${e.message}`);
+            return;
+        }
 
-        await ClippingsStore.addAllClippings(clippings);
+        const newClippings = await ClippingsStore.addAllClippings(clippings);
         await refreshAuthorsAndTitles();
         // This will refresh view, we need to do it every time new clippings get added
         refreshClippings(filters)
         // // kitchenBook.locations = 18213;
         // kitchenBook.locations = 2190;
         // // kitchenBook.locations = 3451;
+        enqueueSnackbar(`Added new ${newClippings} clippings of total ${clippings.length} processed.`);
     }
 
     const fileAdded = async (ev: ChangeEvent<HTMLInputElement>) => {
         const files: (FileList | null) = ev.target.files;
-        if (files == null || files.length === 0)
+        if (files == null || files.length !== 1)
             return;
-        for (let file of files) {
-            if (file.type === "text/plain")
-                await handleMyClippings(file);
-            else
-                handleBook(file);
+        const file = files[0];
+        try {
+            BookService.ebookMediaType(file.name);
+        } catch (e) {
+            if (file.type !== "text/plain") {
+                enqueueSnackbar("Only My Clippings.txt html, mobi, azw and azw3 files are supported.");
+                return;
+            }
         }
+        if (file.type === "text/plain")
+            await handleMyClippings(file);
+        else
+            handleBook(file);
     };
 
     const exportClippings = async (): Promise<void> => {
@@ -115,15 +145,17 @@ const App: React.FC = () => {
         let name = otherSettings.renderOptions.name;
         if (otherSettings.renderOptions.useBookTitle && filters.book.length === 1)
             name = filters.book[0];
-
+        if (otherSettings.renderOptions.useBookTitle && otherSettings.renderOptions.postfix)
+            name += otherSettings.renderOptions.postfix;
+        const useIndex = contents.length > 1;
         if (otherSettings.emailConfiguration.sendToKindleEmail) {
             contents.forEach((content, index) =>
                 sendEmail(content,
-                    `${index}_${name}`,
+                    `${name} ${useIndex && index}`.trim(),
                     otherSettings.emailConfiguration));
         } else {
             contents.forEach((content, index) =>
-                triggerDownload(content, `${index}_${name}`));
+                triggerDownload(content, `${name} ${useIndex && index}`.trim()));
         }
     };
 
@@ -131,7 +163,12 @@ const App: React.FC = () => {
         EmailService
             .sendClippings(name, content, emailConfiguration)
             .catch((error) => {
-                alert(error);
+                enqueueSnackbar(`Error sending email. ${error}`);
+            })
+            .then(() => {
+                enqueueSnackbar("Files were sent to your kindle email." +
+                    "\n Make sure that myclippingsmanager@gmail.com is on your approved kindle email list." +
+                    "\n Otherwise your files will not be delivered to your device.");
             })
     }
 
@@ -209,33 +246,41 @@ const App: React.FC = () => {
     };
 
     const setOtherSettings = (otherSettings: OtherSettings) => {
-        if (otherSettings.renderOptions.clippingsPerFile! < 1)
-            otherSettings.renderOptions.clippingsPerFile = 1
-        if (otherSettings.renderOptions.clippingsPerPage! < 1)
-            otherSettings.renderOptions.clippingsPerPage = 1
-        if (!otherSettings.emailConfiguration.kindleEmail.endsWith("@kindle.com")) {
-            const at = otherSettings.emailConfiguration.kindleEmail.indexOf("@")
-            const fixedEmail = otherSettings.emailConfiguration.kindleEmail.substring(0, at);
-            otherSettings.emailConfiguration.kindleEmail = fixedEmail + "@kindle.com"
-        }
-        if (!otherSettings.renderOptions.name) {
-            otherSettings.renderOptions.name = "Exported Clippings.txt"
-        }
-        if (!otherSettings.renderOptions.name!.endsWith(".txt")) {
-            const dot = otherSettings.renderOptions.name.lastIndexOf(".")
-            const fixedName = otherSettings.renderOptions.name.substring(0, dot);
-            otherSettings.renderOptions.name = fixedName + ".txt"
-        }
+        // if (otherSettings.renderOptions.clippingsPerFile &&
+        //     otherSettings.renderOptions.clippingsPerFile < 15)
+        //     otherSettings.renderOptions.clippingsPerFile = 15
+        // if (otherSettings.renderOptions.clippingsPerPage &&
+        //     otherSettings.renderOptions.clippingsPerPage < 1)
+        //     otherSettings.renderOptions.clippingsPerPage = 1
+        // if (!otherSettings.emailConfiguration.kindleEmail.endsWith("@kindle.com")) {
+        //     const at = otherSettings.emailConfiguration.kindleEmail.indexOf("@")
+        //     const fixedEmail = otherSettings.emailConfiguration.kindleEmail.substring(0, at);
+        //     otherSettings.emailConfiguration.kindleEmail = fixedEmail + "@kindle.com"
+        // }
+        // if (!otherSettings.renderOptions.name) {
+        //     otherSettings.renderOptions.name = "Exported Clippings.txt"
+        // }
+        // if (!otherSettings.renderOptions.name!.endsWith(".txt")) {
+        //     const dot = otherSettings.renderOptions.name.lastIndexOf(".")
+        //     const fixedName = otherSettings.renderOptions.name.substring(0, dot);
+        //     otherSettings.renderOptions.name = fixedName + ".txt"
+        // }
+
         _setOtherSettings(otherSettings);
         saveOtherSettings(otherSettings);
     }
 
     return (
         <div className="App">
-            <input type="file" onChange={fileAdded} ref={openFilePickerRef} hidden={true}/>
-            <Button variant="contained" onClick={() => openFilePickerRef.current.click()}>
-                MyClippings.txt / html / azw / azw3
-            </Button>
+            <input type="file" onChange={fileAdded} ref={openFilePickerRef} hidden={true} multiple={false}
+                   accept={".txt,.html,.mobi,.azw,.azw3"}/>
+            <Tooltip
+                title={"Load \"My Clippings.txt\" or ebook (html, mobi, azw, azw3)." +
+                "\nEbooks are used to find sentences surrounding highlights."}>
+                <Button variant="contained" onClick={() => openFilePickerRef.current.click()}>
+                    MyClippings.txt / html / azw / azw3
+                </Button>
+            </Tooltip>
             <br/>
             <Header exportClippings={exportClippings} filters={filters} setFilters={refreshClippings} authors={authors}
                     titles={titles}

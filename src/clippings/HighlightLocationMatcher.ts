@@ -174,19 +174,24 @@ export class HighlightLocationMatcher {
                 sentenceStart = i + 1;
             }
         }
+        if (sentenceStart < input.length)
+            sentences.push(input.substring(sentenceStart))
         return sentences;
     }
 
-    setSurroundings(highlights: Clipping[], sentencesNumber: number = 1) {
+    setSurroundings(highlights: Clipping[], sentencesNumber: number = 1): number {
+        let count = 0;
         _.sortBy(highlights, ["location.start"]).forEach(highlight => {
             const bytePosition = this.findHighlightByteIndex(highlight);
             if (bytePosition != null) {
+                count++;
                 const surroundingContent = this.surroundingSentences(bytePosition, sentencesNumber);
                 const before = this.splitSentences(surroundingContent.before);
                 const after = this.splitSentences(surroundingContent.after);
                 highlight.surrounding = {before, after};
             }
-        })
+        });
+        return count;
     }
 
 }

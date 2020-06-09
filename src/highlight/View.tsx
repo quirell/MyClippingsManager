@@ -27,10 +27,15 @@ interface Props extends WithStyles<typeof styles> {
 }
 
 function View({classes, displayOptions, clipping}: Props) {
+
     return <Typography variant={"body2"} className={classes.content}>
         {displayOptions.surrounding.show && clipping.surrounding &&
         <span className={classes.surrounding}>
-                            {clipping.surrounding.before.slice(0, displayOptions.surrounding.sentencesNumber)}
+                            {clipping.surrounding.before.slice(
+                                clipping.surrounding.before.length -
+                                Math.min(displayOptions.surrounding.sentencesNumber,
+                                    clipping.surrounding.before.length)
+                                , clipping.surrounding.before.length)}
                         </span>}
         {clipping.modifiedContent || clipping.content}
         {displayOptions.surrounding.show && clipping.surrounding &&

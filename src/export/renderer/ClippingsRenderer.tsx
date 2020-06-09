@@ -8,6 +8,7 @@ import {DisplayOptions} from "../../header/DisplayOptions";
 
 export interface RenderOptions {
     name?: string,
+    postfix?: string,
     clippingsPerPage?: number,
     clippingsPerFile?: number,
     useBookTitle?: boolean
@@ -21,7 +22,8 @@ export class ClippingsRenderer {
                 private clippings: Clipping[]) {
         this.defaultedOptions = {
             name: "exported-clippings.txt",
-            clippingsPerPage: 5,
+            postfix: "",
+            clippingsPerPage: clippings.length,
             clippingsPerFile: clippings.length,
             useBookTitle: false,
             ...options

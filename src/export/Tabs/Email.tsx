@@ -1,6 +1,15 @@
-import {Checkbox, createStyles, FormControlLabel, TextField, withStyles, WithStyles} from "@material-ui/core";
+import {
+    Checkbox,
+    createStyles,
+    FormControlLabel,
+    TextField,
+    Typography,
+    withStyles,
+    WithStyles
+} from "@material-ui/core";
 import React from "react";
 import {EmailConfiguration} from "../email/EmailService";
+import CopyToClipboard from "./CopyToClipboard";
 
 
 const styles = createStyles({
@@ -23,7 +32,6 @@ export default withStyles(styles)(function Email({configuration, setConfiguratio
         const value = event.target.type === "checkbox" ? event.target.checked : event.target.value;
         setConfiguration({...configuration, [name]: value});
     };
-
     return (
         <div className={className}>
             <TextField
@@ -41,6 +49,20 @@ export default withStyles(styles)(function Email({configuration, setConfiguratio
                 }
                 label="Send to your Kindle E-mail"
             />
+            <Typography>
+                In order to recieve files sent to your device's kindle email you need to add&nbsp;
+                <b>
+                    myclippingsmanager@gmail.com
+                    <CopyToClipboard value={"myclippingsmanager@gmail.com"}/>
+                </b>
+                to your approved kindle email list. Kindly find more information under that&nbsp;
+                <a
+                    href={"https://www.amazon.com/gp/help/customer/display.html?nodeId=GX9XLEVV8G4DB28H"}
+                    target={"_blank"}>
+                    link
+                </a>
+                .
+            </Typography>
         </div>
     )
 });

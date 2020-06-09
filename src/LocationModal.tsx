@@ -43,15 +43,20 @@ function LocationModal({open, onCancel, onAccept, classes,}: Props) {
                     justify="center"
                     alignItems="center"
                 >
-                    <Grid item className={classes.item}><TextField
-                        inputRef={locationsRef} inputProps={{min: "1"}}
-                        label="Number of locations" defaultValue={1} type={"number"}/>
+                    Number of locations the book has.<br/>
+                    You can find it by opening the book on your kindle device.<br/>
+                    If you type an incorrect number text surrounding your highlights will not be found.<br/>
+                    You can also set the correct number later in the Books Section.<br/>
+                    <Grid item className={classes.item}>
+                        <TextField
+                            inputRef={locationsRef}
+                            label="Number of locations" defaultValue={1} type={"number"}/>
                     </Grid>
                 </Grid>
             </DialogContent>
             <DialogActions>
                 <Button color={"secondary"} size={"large"}
-                        onClick={onCancel}>Dismiss</Button>
+                        onClick={onCancel}>Later</Button>
                 <Button color={"primary"} size={"large"}
                         onClick={() => {
                             onAccept(Number(locationsRef.current.value))
