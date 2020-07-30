@@ -3,7 +3,7 @@ import './App.css';
 import Display from "./Display";
 import {Book, Clipping} from "./clippings/Clipping";
 import {parseClippingsFile} from "./clippings/ClippingsFIleParser";
-import {Button} from "@material-ui/core";
+import {Button, LinearProgress} from "@material-ui/core";
 import {defaultFilters, Filters} from "./filters/filterClippings";
 import {HighlightLocationMatcher} from "./clippings/HighlightLocationMatcher";
 import {defaultDisplayOptions, DisplayOptions} from "./header/DisplayOptions";
@@ -51,6 +51,7 @@ const App: React.FC = () => {
     const [clippings, setClippings] = React.useState<Clipping[]>([]);
     const [clippingsCount, setClippingsCount] = React.useState<number>(0);
     const [locationModalOpen, setLocationModalOpen] = React.useState<boolean>(false);
+    const [processingFile, setProcessingFile] = React.useState<boolean>(false);
     const bookFile = React.useRef<File | null>(null);
 
     React.useEffect(() => {
@@ -66,6 +67,7 @@ const App: React.FC = () => {
         try {
             htmlBook = await BookService.convertBook(bookFile.current!);
         } catch (e) {
+            setProcessingFile(false);
             enqueueSnackbar(`Failed to extract html from book ${e.message}`);
             return;
         }
@@ -81,6 +83,7 @@ const App: React.FC = () => {
         try {
             matchedHighlightsCount = highlightLocationMatcher.setSurroundings(highlights, 3);
         } catch (e) {
+            setProcessingFile(false);
             enqueueSnackbar("Error processing book," +
                 " maybe book doesn't match the one you read or the number of locations doesn't match ?");
             return;
@@ -88,6 +91,7 @@ const App: React.FC = () => {
         await BookStore.addBook(book);
         await ClippingsStore.updateClippings(highlights);
         bookFile.current = null;
+        setProcessingFile(false);
         enqueueSnackbar(`Surrounding sentences found for
          ${matchedHighlightsCount}/${highlights.length} from book: ${book.title}`);
     }
@@ -102,6 +106,7 @@ const App: React.FC = () => {
         try {
             clippings = await parseClippingsFile(file);
         } catch (e) {
+            setProcessingFile(false);
             enqueueSnackbar(`Failed to process clippings file ${e.message}`);
             return;
         }
@@ -114,6 +119,7 @@ const App: React.FC = () => {
         // kitchenBook.locations = 2190;
         // // kitchenBook.locations = 3451;
         enqueueSnackbar(`Added new ${newClippings} clippings of total ${clippings.length} processed.`);
+        setProcessingFile(false);
     }
 
     const fileAdded = async (ev: ChangeEvent<HTMLInputElement>) => {
@@ -129,6 +135,8 @@ const App: React.FC = () => {
                 return;
             }
         }
+        console.log("start processing")
+        setProcessingFile(true);
         if (file.type === "text/plain")
             await handleMyClippings(file);
         else
@@ -151,24 +159,24 @@ const App: React.FC = () => {
         if (otherSettings.emailConfiguration.sendToKindleEmail) {
             contents.forEach((content, index) =>
                 sendEmail(content,
-                    `${name} ${useIndex && index}`.trim(),
+                    `${name} ${useIndex && index || ''}`.trim() + ".txt",
                     otherSettings.emailConfiguration));
         } else {
             contents.forEach((content, index) =>
-                triggerDownload(content, `${name} ${useIndex && index}`.trim()));
+                triggerDownload(content, `${name} ${useIndex && index || ''}`.trim() + ".txt"));
         }
     };
 
     const sendEmail = (content: string, name: string, emailConfiguration: EmailConfiguration) => {
         EmailService
             .sendClippings(name, content, emailConfiguration)
-            .catch((error) => {
-                enqueueSnackbar(`Error sending email. ${error}`);
-            })
             .then(() => {
                 enqueueSnackbar("Files were sent to your kindle email." +
                     "\n Make sure that myclippingsmanager@gmail.com is on your approved kindle email list." +
                     "\n Otherwise your files will not be delivered to your device.");
+            })
+            .catch((error) => {
+                enqueueSnackbar(`Error sending email. ${error}`);
             })
     }
 
@@ -274,25 +282,37 @@ const App: React.FC = () => {
         <div className="App">
             <input type="file" onChange={fileAdded} ref={openFilePickerRef} hidden={true} multiple={false}
                    accept={".txt,.html,.mobi,.azw,.azw3"}/>
-            <Tooltip
-                title={"Load \"My Clippings.txt\" or ebook (html, mobi, azw, azw3)." +
-                "\nEbooks are used to find sentences surrounding highlights."}>
-                <Button variant="contained" onClick={() => openFilePickerRef.current.click()}>
-                    MyClippings.txt / html / azw / azw3
-                </Button>
-            </Tooltip>
-            <br/>
+            <div style={{display: "inline-block", margin: "auto"}}>
+                <Tooltip
+                    title={"Load \"My Clippings.txt\" or ebook (html, mobi, azw, azw3)." +
+                    "\nEbooks are used to find sentences surrounding highlights."}>
+                    <Button variant="contained" onClick={() => {
+                        openFilePickerRef.current.value = null;
+                        openFilePickerRef.current.click();
+                    }} disableRipple={processingFile}>
+                        <>MyClippings.txt / html / azw / azw3</>
+                    </Button>
+                </Tooltip>
+                {
+                    processingFile &&
+                    <LinearProgress color={"secondary"}
+                                    style={{marginTop: -4, borderBottomLeftRadius: 4, borderBottomRightRadius: 4}}/>
+                }
+            </div>
             <Header exportClippings={exportClippings} filters={filters} setFilters={refreshClippings} authors={authors}
                     titles={titles}
                     displayOptions={displayOptions} setDisplayOptions={setDisplayOptions}
                     deleteAllVisible={deleteAllVisible}
                     otherSettings={otherSettings} setOtherSettings={setOtherSettings}/>
-            <br/>
+
             <Display displayOptions={displayOptions} clippingsCount={clippingsCount} clippings={clippings}
                      saveClipping={saveClipping}
                      removeNote={removeNote} removeClipping={removeClipping} loadClippings={loadMoreRows}/>
             <LocationModal open={locationModalOpen}
-                           onCancel={() => setLocationModalOpen(false)}
+                           onCancel={() => {
+                               setLocationModalOpen(false);
+                               setProcessingFile(false);
+                           }}
                            onAccept={handleBookInternal}
             />
         </div>

@@ -20,7 +20,13 @@ function selectParser(clipping: RawClipping, parsers: ClippingParser[]): Clippin
 function parseClippings(lineReader: LineReader): Clipping[] {
     const clippings: Clipping[] = [];
     while (lineReader.hasNextLine) {
-        const rawClipping = readNextClipping(lineReader);
+        let rawClipping;
+        try {
+            rawClipping = readNextClipping(lineReader);
+        } catch (e) {
+            console.error(e);
+            throw new Error("My Clippings file format not recognized");
+        }
         try {
             const parser = selectParser(rawClipping, clippingParsers);
             clippings.push(parser.parseClipping(rawClipping));
@@ -33,10 +39,10 @@ function parseClippings(lineReader: LineReader): Clipping[] {
 }
 
 export async function parseClippingsFile(file: File): Promise<Clipping[]> {
-    return new Promise<Clipping[]>((resolve, reject) => {
+    return new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
-        reader.onload = () => resolve(parseClippings(new LineReader(reader.result as string)));
+        reader.onload = () => resolve(reader.result as string);
         reader.onerror = reject;
         reader.readAsText(file);
-    });
+    }).then(result => parseClippings(new LineReader(result)));
 }

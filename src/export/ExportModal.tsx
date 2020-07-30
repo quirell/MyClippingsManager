@@ -17,7 +17,7 @@ import {EmailConfiguration} from "./email/EmailService";
 
 const styles = createStyles({
     content: {
-        minHeight: "350px"
+        minHeight: "400px"
     },
     box: {
         display: "flex",

@@ -19,11 +19,11 @@ class _EmailService {
                 console.log(error);
                 let message;
                 if (!error.response)
-                    message = "Unknown error";
-                if (error.response.status === 400) {
+                    message = "Couldn't connect to server";
+                else if (error.response.status === 400) {
                     message = error.response.data
                 } else if (error.response.status === 404) {
-                    message = "Couldn't connect to server";
+                    message = "Server not found";
                 } else if (error.response.status === 504) {
                     message = "Unexpected error";
                 } else {

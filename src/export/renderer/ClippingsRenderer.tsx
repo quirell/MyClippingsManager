@@ -24,18 +24,17 @@ export class ClippingsRenderer {
             name: "exported-clippings.txt",
             postfix: "",
             clippingsPerPage: clippings.length,
-            clippingsPerFile: clippings.length,
+            clippingsPerFile: 100,
             useBookTitle: false,
-            ...options
+            ..._.pickBy(options)
         };
     }
 
     render(): string[] {
         return _(this.clippings)
-            .chunk(this.defaultedOptions.clippingsPerFile)
+            .chunk(this.clippings.length * (this.defaultedOptions.clippingsPerFile / 100))
             .map(cs => this.renderSingle(cs, this.defaultedOptions, this.displayOptions))
             .value()
-        //_.delay(() => this.triggerDownload(content, this.defaultedOptions), 300)
     }
 
     private renderSingle(clippings: Clipping[], options: Required<RenderOptions>, displayOptions: DisplayOptions) {
