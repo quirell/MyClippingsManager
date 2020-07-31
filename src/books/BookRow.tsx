@@ -43,6 +43,12 @@ export default function BookRow({title, deleted}: Props) {
         deleted(title);
     };
 
+    const restoreClippings = async (): Promise<void> => {
+        const restoredClippings = await ClippingsStore.restoreClippings(title);
+        enqueueSnackbar(`Restored ${restoredClippings} clippings.`);
+        setInfo({...info, clippings: restoredClippings, deleted: 0});
+    }
+
     const [editable, setEditable] = React.useState(false);
 
     const handleChange = (name: string) => (event: React.ChangeEvent<any>, value?: any) => {
@@ -102,6 +108,9 @@ export default function BookRow({title, deleted}: Props) {
             <TableCell align="right">
                 <IconButton size={"small"} onClick={deleteBookAndClippings}>
                     <Icon className={clsx("fas fa-trash-alt")}/>
+                </IconButton>
+                <IconButton size={"small"} onClick={restoreClippings}>
+                    <Icon className={clsx("fas fa-redo")}/>
                 </IconButton>
             </TableCell>
         </TableRow>

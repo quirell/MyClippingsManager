@@ -36,6 +36,8 @@ export interface ClippingsStore {
     getAllTitles(): Promise<string[]>
 
     getCountByTitle(title: string, deleted?: boolean): Promise<number>
+
+    restoreClippings(title: string): Promise<number>
 }
 
 export interface Pagination {
@@ -173,6 +175,13 @@ class IndexedDbClippingStore implements ClippingsStore {
         return this.db.clippings
             .where("[deleted+title]")
             .equals([Number(deleted), title]).count()
+    }
+
+    async restoreClippings(title: string): Promise<number> {
+        return await this.db.clippings
+            .where("[deleted+title]")
+            .equals([1, title])
+            .modify({deleted: 0});
     }
 
 }

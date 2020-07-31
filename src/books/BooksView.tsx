@@ -37,7 +37,7 @@ export default function BooksView() {
                         <TableCell align="right">Clippings</TableCell>
                         <TableCell align="right">(Removed)</TableCell>
                         <TableCell align="right">Edit</TableCell>
-                        <TableCell align="right">Delete</TableCell>
+                        <TableCell align="right">Delete / Restore</TableCell>
                     </TableRow>
                 </TableHead>
                 <TableBody>
