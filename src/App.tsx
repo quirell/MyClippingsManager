@@ -3,7 +3,7 @@ import './App.css';
 import Display from "./Display";
 import {Book, Clipping} from "./clippings/Clipping";
 import {parseClippingsFile} from "./clippings/ClippingsFIleParser";
-import {Button, LinearProgress} from "@material-ui/core";
+import {Button, Icon, IconButton, LinearProgress} from "@material-ui/core";
 import {defaultFilters, Filters} from "./filters/filterClippings";
 import {HighlightLocationMatcher} from "./clippings/HighlightLocationMatcher";
 import {defaultDisplayOptions, DisplayOptions} from "./header/DisplayOptions";
@@ -18,6 +18,8 @@ import {BookStore} from "./storage/IndexedDbBookStore";
 import {EmailConfiguration, EmailService} from "./export/email/EmailService";
 import Tooltip from "@material-ui/core/Tooltip";
 import {useSnackbar} from "notistack";
+import clsx from "clsx";
+import HelpModal from "./HelpModal";
 
 function loadOtherSettings(): OtherSettings {
     const settings = localStorage.getItem("othersettings");
@@ -51,6 +53,7 @@ const App: React.FC = () => {
     const [clippings, setClippings] = React.useState<Clipping[]>([]);
     const [clippingsCount, setClippingsCount] = React.useState<number>(0);
     const [locationModalOpen, setLocationModalOpen] = React.useState<boolean>(false);
+    const [helpModalOpen, setHelpModalOpen] = React.useState<boolean>(false);
     const [processingFile, setProcessingFile] = React.useState<boolean>(false);
     const bookFile = React.useRef<File | null>(null);
 
@@ -61,18 +64,30 @@ const App: React.FC = () => {
         // only on init
     }, []);
 
-    async function handleBookInternal(locations: number): Promise<void> {
-        setLocationModalOpen(false);
+    async function convertBook() : Promise<Book | null>{
         let htmlBook;
         try {
             htmlBook = await BookService.convertBook(bookFile.current!);
         } catch (e) {
             setProcessingFile(false);
             enqueueSnackbar(`Failed to extract html from book ${e.message}`);
+            return null;
+        }
+        const book: Book = {...htmlBook, locations:0};
+        await BookStore.addBook(book);
+        bookFile.current = null;
+        return book;
+    }
+
+    async function handleBookInternal(locations: number): Promise<void> {
+        setLocationModalOpen(false);
+
+        const book: Book | null = await convertBook();
+
+        if(!book){
+            setProcessingFile(false);
             return;
         }
-
-        const book: Book = {...htmlBook, locations};
         const bookHighlightFilter = {...defaultFilters, book: [book.title], highlight: true};
         const highlights = await ClippingsStore.getClippings(bookHighlightFilter, {
             startIndex: 0,
@@ -88,9 +103,7 @@ const App: React.FC = () => {
                 " maybe book doesn't match the one you read or the number of locations doesn't match ?");
             return;
         }
-        await BookStore.addBook(book);
         await ClippingsStore.updateClippings(highlights);
-        bookFile.current = null;
         setProcessingFile(false);
         enqueueSnackbar(`Surrounding sentences found for
          ${matchedHighlightsCount}/${highlights.length} from book: ${book.title}`);
@@ -254,26 +267,6 @@ const App: React.FC = () => {
     };
 
     const setOtherSettings = (otherSettings: OtherSettings) => {
-        // if (otherSettings.renderOptions.clippingsPerFile &&
-        //     otherSettings.renderOptions.clippingsPerFile < 15)
-        //     otherSettings.renderOptions.clippingsPerFile = 15
-        // if (otherSettings.renderOptions.clippingsPerPage &&
-        //     otherSettings.renderOptions.clippingsPerPage < 1)
-        //     otherSettings.renderOptions.clippingsPerPage = 1
-        // if (!otherSettings.emailConfiguration.kindleEmail.endsWith("@kindle.com")) {
-        //     const at = otherSettings.emailConfiguration.kindleEmail.indexOf("@")
-        //     const fixedEmail = otherSettings.emailConfiguration.kindleEmail.substring(0, at);
-        //     otherSettings.emailConfiguration.kindleEmail = fixedEmail + "@kindle.com"
-        // }
-        // if (!otherSettings.renderOptions.name) {
-        //     otherSettings.renderOptions.name = "Exported Clippings.txt"
-        // }
-        // if (!otherSettings.renderOptions.name!.endsWith(".txt")) {
-        //     const dot = otherSettings.renderOptions.name.lastIndexOf(".")
-        //     const fixedName = otherSettings.renderOptions.name.substring(0, dot);
-        //     otherSettings.renderOptions.name = fixedName + ".txt"
-        // }
-
         _setOtherSettings(otherSettings);
         saveOtherSettings(otherSettings);
     }
@@ -282,6 +275,9 @@ const App: React.FC = () => {
         <div className="App">
             <input type="file" onChange={fileAdded} ref={openFilePickerRef} hidden={true} multiple={false}
                    accept={".txt,.html,.mobi,.azw,.azw3"}/>
+            <IconButton size={"small"} style={{float: "right"}} onClick={() => setHelpModalOpen(true)}>
+                <Icon className={"fas fa-question"}/>
+            </IconButton>
             <div style={{display: "inline-block", margin: "auto"}}>
                 <Tooltip
                     title={"Load \"My Clippings.txt\" or ebook (html, mobi, azw, azw3)." +
@@ -313,8 +309,16 @@ const App: React.FC = () => {
                                setLocationModalOpen(false);
                                setProcessingFile(false);
                            }}
+                           onLater={async () => {
+                               setLocationModalOpen(false);
+                               const book = await convertBook();
+                               setProcessingFile(false);
+                               if(book)
+                                   enqueueSnackbar(`Converted ${book.title}`);
+                           }}
                            onAccept={handleBookInternal}
             />
+            <HelpModal open={helpModalOpen} onClose={() => setHelpModalOpen(false)} />
         </div>
     );
 };

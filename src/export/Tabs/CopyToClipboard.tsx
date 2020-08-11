@@ -30,7 +30,7 @@ function CopyToClipboard(props: Props) {
         text.value = props.value;
         text.select();
         document.execCommand("copy");
-        enqueueSnackbar("myclippingsmanager@gmail.com was copied to your clipboard!")
+        enqueueSnackbar(`${props.value} was copied to your clipboard!`)
     }
 
     return (

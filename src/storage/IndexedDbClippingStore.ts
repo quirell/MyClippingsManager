@@ -33,7 +33,7 @@ export interface ClippingsStore {
 
     getAllAuthors(): Promise<string[]>
 
-    getAllTitles(): Promise<string[]>
+    getAllTitles(includeDeleted?: boolean): Promise<string[]>
 
     getCountByTitle(title: string, deleted?: boolean): Promise<number>
 
@@ -163,10 +163,11 @@ class IndexedDbClippingStore implements ClippingsStore {
         return keys.map(key => key[1])
     }
 
-    async getAllTitles(): Promise<string[]> {
+    async getAllTitles(includeDeleted = false): Promise<string[]> {
+
         const keys = await this.db.clippings
             .where("[deleted+title]")
-            .between([0, Dexie.minKey], [0, Dexie.maxKey])
+            .between([0, Dexie.minKey], [(Number)(includeDeleted), Dexie.maxKey])
             .uniqueKeys() as any[];
         return keys.map(key => key[1])
     }

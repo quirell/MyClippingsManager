@@ -17,7 +17,7 @@ export default function BooksView() {
     React.useEffect(() => {
         Promise.all([
                 BookStore.getAllTitles(),
-                ClippingsStore.getAllTitles()
+                ClippingsStore.getAllTitles(true)
             ]
         ).then((result) => setTitles(_.uniq(result.flatMap(titles => titles))))
 

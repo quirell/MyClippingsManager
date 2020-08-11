@@ -58,7 +58,9 @@ export default withStyles(styles)(function Email({configuration, setConfiguratio
                 to your approved kindle email list. Kindly find more information under that&nbsp;
                 <a
                     href={"https://www.amazon.com/gp/help/customer/display.html?nodeId=GX9XLEVV8G4DB28H"}
-                    target={"_blank"}>
+                    target={"_blank"}
+                    rel={"noopener noreferrer"}
+                >
                     link
                 </a>
                 .

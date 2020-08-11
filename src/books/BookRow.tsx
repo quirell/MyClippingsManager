@@ -24,7 +24,11 @@ export default function BookRow({title, deleted}: Props) {
     const classes = useStyles();
     const {enqueueSnackbar} = useSnackbar();
     const [info, setInfo] = React
-        .useState<{ locations?: number, clippings?: number, deleted?: number }>({})
+        .useState<{ locations?: number, clippings: number, deleted: number, noBook?: boolean }>({
+            clippings: 0,
+            deleted: 0
+        });
+
     React.useEffect(() => {
         ClippingsStore
             .getCountByTitle(title)
@@ -34,13 +38,14 @@ export default function BookRow({title, deleted}: Props) {
             .then(deleted => setInfo(prev => ({...prev, deleted})))
         BookStore
             .getBook(title)
-            .then(book => setInfo(prev => ({...prev, locations: book?.locations})));
+            .then(book => setInfo(prev => ({...prev, locations: book?.locations, noBook: !book})));
     }, []);
 
     const deleteBookAndClippings = async (): Promise<void> => {
         await BookStore.deleteBook(title)
         await ClippingsStore.deleteClippings({...defaultFilters, book: [title]});
-        deleted(title);
+        enqueueSnackbar(`Deleted book and  ${info.clippings} clippings.`);
+        setInfo({...info, clippings: 0, deleted: info.deleted + info.clippings});
     };
 
     const restoreClippings = async (): Promise<void> => {
@@ -75,7 +80,7 @@ export default function BookRow({title, deleted}: Props) {
         await ClippingsStore.updateClippings(highlights);
         enqueueSnackbar(`Surrounding sentences found for
          ${matchedHighlightsCount}/${highlights.length} from book: ${title}`);
-        setEditable(false)
+        setEditable(false);
     }
 
     return (
@@ -94,7 +99,7 @@ export default function BookRow({title, deleted}: Props) {
             <TableCell align="right">
                 {
                     !editable &&
-                    <IconButton size={"small"} onClick={() => setEditable(true)}>
+                    <IconButton size={"small"} onClick={() => setEditable(true)} >
                         <Icon className={clsx("fas fa-edit")}/>
                     </IconButton>
                 }

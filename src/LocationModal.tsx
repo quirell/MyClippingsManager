@@ -25,9 +25,10 @@ interface Props extends WithStyles<typeof styles> {
     open: boolean
     onCancel: () => void
     onAccept: (locations: number) => void
+    onLater: () => void
 }
 
-function LocationModal({open, onCancel, onAccept, classes,}: Props) {
+function LocationModal({open, onCancel, onAccept, classes,onLater}: Props) {
     const locationsRef: any = React.useRef();
     return (
         <Dialog
@@ -56,7 +57,9 @@ function LocationModal({open, onCancel, onAccept, classes,}: Props) {
             </DialogContent>
             <DialogActions>
                 <Button color={"secondary"} size={"large"}
-                        onClick={onCancel}>Later</Button>
+                        onClick={onCancel}>Cancel</Button>
+                <Button color={"secondary"} size={"large"}
+                        onClick={onLater}>Later</Button>
                 <Button color={"primary"} size={"large"}
                         onClick={() => {
                             onAccept(Number(locationsRef.current.value))
