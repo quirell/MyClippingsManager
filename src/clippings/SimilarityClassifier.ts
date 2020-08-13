@@ -9,26 +9,42 @@ class _SimilarityClassifier {
 
     private prev: PartialClipping = {id: "", title: "", content: "", type: Type.highlight};
     private prevGroup = false;
+    // This is a hack - clearChace is called in Display.tsx after the clipping was deleted, but we don't want to do
+    // anything  in such case, because the cache was cleared in the remove clipping function already
+    // I was too lazy to refactor
+    private partialClearMarker = false;
 
-    private cache = new Map<string, boolean>()
+    private cache: boolean[] = [];
 
-    getGroup(clipping: PartialClipping): boolean {
-        const group = this.cache.get(clipping.id);
+    getGroup(index:number,clipping: PartialClipping): boolean {
+        const group = this.cache[index];
         if (group !== undefined)
             return group;
         if (clipping.type !== Type.highlight)
             this.prevGroup = !this.prevGroup;
         else
             this.prevGroup = this.prevGroup === this.overlapByLocationAndContent(this.prev, clipping);
-        this.cache.set(clipping.id, this.prevGroup);
+        this.cache[index] = this.prevGroup
         this.prev = clipping;
         return this.prevGroup;
     }
 
-    clearCache() {
-        this.prev = {id: "", title: "", content: "", type: Type.highlight};
-        this.prevGroup = false;
-        this.cache.clear();
+    clearCache(before?:{clipping:Clipping,index:number}) {
+        if(this.partialClearMarker){
+            this.partialClearMarker = false;
+            return;
+        }
+
+        if(!before){
+            this.prev = {id: "", title: "", content: "", type: Type.highlight};
+            this.prevGroup = false;
+            this.cache = [];
+        }else{
+            this.prevGroup = this.cache[before.index];
+            this.cache = this.cache.slice(0,before.index+1);
+            this.prev = before.clipping;
+            this.partialClearMarker = true;
+        }
     }
 
     /**

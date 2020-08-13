@@ -58,6 +58,7 @@ export default function Display(props: Props) {
             >
                 <div style={style} key={key}>
                     <Highlight clipping={c}
+                               index={index}
                                displayOptions={props.displayOptions}
                                removeClipping={props.removeClipping}
                                removeNote={props.removeNote}

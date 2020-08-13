@@ -20,6 +20,7 @@ import Tooltip from "@material-ui/core/Tooltip";
 import {useSnackbar} from "notistack";
 import clsx from "clsx";
 import HelpModal from "./HelpModal";
+import {SimilarityClassifier} from "./clippings/SimilarityClassifier";
 
 function loadOtherSettings(): OtherSettings {
     const settings = localStorage.getItem("othersettings");
@@ -249,13 +250,22 @@ const App: React.FC = () => {
         const clippingsToUpdate = await ClippingsStore.deleteClipping(clipping.id);
         const updatedClippings = new Array(clippings.length - 1);
         let nextIndex = 0;
+        let deletedIndex = 0;
         // TODO this code is probably too complicated, maybe should be replaced with something simpler
         for (let current of clippings) {
             // Remove clipping
-            if (clipping === current) continue;
+            if (clipping === current) {
+                deletedIndex = nextIndex;
+                continue;
+            }
             const index = _.findIndex(clippingsToUpdate, {id: current.id});
             // If the clipping was note there might be highlights from which note has been removed, so update them
             updatedClippings[nextIndex++] = index !== -1 ? clippingsToUpdate[index] : current;
+        }
+        if(deletedIndex > 0){
+            // After delete we don't want to clear the cache of clippings before the removed element because it would
+            // mess up colours
+            SimilarityClassifier.clearCache({clipping:updatedClippings[deletedIndex-1],index:deletedIndex-1})
         }
         setClippings(updatedClippings);
         setClippingsCount(clippingsCount - 1);

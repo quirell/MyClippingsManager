@@ -85,11 +85,12 @@ interface Props extends WithStyles<typeof styles> {
     removeClipping: RemoveHandler
     removeNote: RemoveNoteHandler
     saveClipping: SaveClippingHandler
+    index: number
 }
 
 
 function Highlight(props: Props) {
-    const {clipping, classes, style, displayOptions, removeClipping, removeNote} = props;
+    const {clipping, classes, style, displayOptions, removeClipping, removeNote, index} = props;
     const [edit, setEdit] = React.useState(false);
     const saveClipping = (clipping: Clipping) => {
         props.saveClipping(clipping);
@@ -97,7 +98,7 @@ function Highlight(props: Props) {
     };
     let similarityClass = classes.similarity_default;
     if (displayOptions.groupSimilar) {
-        similarityClass = SimilarityClassifier.getGroup(clipping) ? classes.similarity_one : classes.similarity_two;
+        similarityClass = SimilarityClassifier.getGroup(index,clipping) ? classes.similarity_one : classes.similarity_two;
     }
 
     return (
