@@ -28,7 +28,7 @@ interface Props extends WithStyles<typeof styles> {
     onLater: () => void
 }
 
-function LocationModal({open, onCancel, onAccept, classes,onLater}: Props) {
+function LocationModal({open, onCancel, onAccept, classes, onLater}: Props) {
     const locationsRef: any = React.useRef();
     return (
         <Dialog

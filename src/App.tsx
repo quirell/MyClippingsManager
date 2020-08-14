@@ -18,7 +18,6 @@ import {BookStore} from "./storage/IndexedDbBookStore";
 import {EmailConfiguration, EmailService} from "./export/email/EmailService";
 import Tooltip from "@material-ui/core/Tooltip";
 import {useSnackbar} from "notistack";
-import clsx from "clsx";
 import HelpModal from "./HelpModal";
 import {SimilarityClassifier} from "./clippings/SimilarityClassifier";
 
@@ -29,7 +28,8 @@ function loadOtherSettings(): OtherSettings {
     return {
         renderOptions: {
             clippingsPerPage: 10,
-            name: "Exported Clippings.txt"
+            name: "Exported Clippings.txt",
+            clippingsPerFile: 100
         },
         emailConfiguration: {
             sendToKindleEmail: false,
@@ -65,7 +65,7 @@ const App: React.FC = () => {
         // only on init
     }, []);
 
-    async function convertBook() : Promise<Book | null>{
+    async function convertBook(): Promise<Book | null> {
         let htmlBook;
         try {
             htmlBook = await BookService.convertBook(bookFile.current!);
@@ -74,7 +74,7 @@ const App: React.FC = () => {
             enqueueSnackbar(`Failed to extract html from book ${e.message}`);
             return null;
         }
-        const book: Book = {...htmlBook, locations:0};
+        const book: Book = {...htmlBook, locations: 0};
         await BookStore.addBook(book);
         bookFile.current = null;
         return book;
@@ -85,7 +85,7 @@ const App: React.FC = () => {
 
         const book: Book | null = await convertBook();
 
-        if(!book){
+        if (!book) {
             setProcessingFile(false);
             return;
         }
@@ -262,10 +262,10 @@ const App: React.FC = () => {
             // If the clipping was note there might be highlights from which note has been removed, so update them
             updatedClippings[nextIndex++] = index !== -1 ? clippingsToUpdate[index] : current;
         }
-        if(deletedIndex > 0){
+        if (deletedIndex > 0) {
             // After delete we don't want to clear the cache of clippings before the removed element because it would
             // mess up colours
-            SimilarityClassifier.clearCache({clipping:updatedClippings[deletedIndex-1],index:deletedIndex-1})
+            SimilarityClassifier.clearCache({clipping: updatedClippings[deletedIndex - 1], index: deletedIndex - 1})
         }
         setClippings(updatedClippings);
         setClippingsCount(clippingsCount - 1);
@@ -323,12 +323,12 @@ const App: React.FC = () => {
                                setLocationModalOpen(false);
                                const book = await convertBook();
                                setProcessingFile(false);
-                               if(book)
+                               if (book)
                                    enqueueSnackbar(`Converted ${book.title}`);
                            }}
                            onAccept={handleBookInternal}
             />
-            <HelpModal open={helpModalOpen} onClose={() => setHelpModalOpen(false)} />
+            <HelpModal open={helpModalOpen} onClose={() => setHelpModalOpen(false)}/>
         </div>
     );
 };

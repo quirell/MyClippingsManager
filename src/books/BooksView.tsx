@@ -11,7 +11,11 @@ const useStyles = makeStyles({
     table: {},
 });
 
-export default function BooksView() {
+export interface BooksViewProps {
+    hideDeleted: boolean
+}
+
+export default function BooksView({hideDeleted}: BooksViewProps) {
     const classes = useStyles();
     const [titles, setTitles] = React.useState<string[]>([])
     React.useEffect(() => {
@@ -22,10 +26,6 @@ export default function BooksView() {
         ).then((result) => setTitles(_.uniq(result.flatMap(titles => titles))))
 
     }, [])
-
-    const removeTitle = (title: string) => {
-        setTitles(titles.filter(t => t !== title));
-    }
 
     return (
         <TableContainer component={Paper}>
@@ -41,7 +41,7 @@ export default function BooksView() {
                     </TableRow>
                 </TableHead>
                 <TableBody>
-                    {titles.map(title => (<BookRow key={title} deleted={removeTitle} title={title}/>))}
+                    {titles.map(title => (<BookRow key={title} title={title} hideDeleted={hideDeleted}/>))}
                 </TableBody>
             </Table>
         </TableContainer>

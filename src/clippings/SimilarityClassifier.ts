@@ -16,7 +16,7 @@ class _SimilarityClassifier {
 
     private cache: boolean[] = [];
 
-    getGroup(index:number,clipping: PartialClipping): boolean {
+    getGroup(index: number, clipping: PartialClipping): boolean {
         const group = this.cache[index];
         if (group !== undefined)
             return group;
@@ -29,19 +29,19 @@ class _SimilarityClassifier {
         return this.prevGroup;
     }
 
-    clearCache(before?:{clipping:Clipping,index:number}) {
-        if(this.partialClearMarker){
+    clearCache(before?: { clipping: Clipping, index: number }) {
+        if (this.partialClearMarker) {
             this.partialClearMarker = false;
             return;
         }
 
-        if(!before){
+        if (!before) {
             this.prev = {id: "", title: "", content: "", type: Type.highlight};
             this.prevGroup = false;
             this.cache = [];
-        }else{
+        } else {
             this.prevGroup = this.cache[before.index];
-            this.cache = this.cache.slice(0,before.index+1);
+            this.cache = this.cache.slice(0, before.index + 1);
             this.prev = before.clipping;
             this.partialClearMarker = true;
         }

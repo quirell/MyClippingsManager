@@ -98,7 +98,7 @@ function Highlight(props: Props) {
     };
     let similarityClass = classes.similarity_default;
     if (displayOptions.groupSimilar) {
-        similarityClass = SimilarityClassifier.getGroup(index,clipping) ? classes.similarity_one : classes.similarity_two;
+        similarityClass = SimilarityClassifier.getGroup(index, clipping) ? classes.similarity_one : classes.similarity_two;
     }
 
     return (

@@ -6,8 +6,6 @@ import {
     DialogActions,
     DialogContent,
     DialogTitle,
-    Grid,
-    TextField,
     withStyles,
     WithStyles
 } from "@material-ui/core";
@@ -35,16 +33,30 @@ function HelpModal({open, onClose, classes}: Props) {
         >
             <DialogTitle>About MyClippings Manager</DialogTitle>
             <DialogContent>
-                This application can be used to manage Kindle's MyClippings files.
-                It stores the data only in your browser's local storage
-                so there's currently no synchronization between devices.
-                
-                If you have any suggestions or want to report a bug,
-                feel free to contact the developers via email&nbsp;
-                <b>
-                    myclippingsmanager@gmail.com
-                    <CopyToClipboard value={"myclippingsmanager@gmail.com"}/>
-                </b>
+                <p>This application can be used to manage Kindle's MyClippings files.
+                    It stores the data only in your browser's local storage
+                    so there's currently no synchronization between devices.
+                </p>
+                <p>
+                    You can add MyClippings.txt files, or books in html, mobi or azw3 format,
+                    although they must not be encrypted, so you need to decrypt them using
+                    for example the <a href={"https://calibre-ebook.com/"}>Calibre</a> software.
+                </p>
+                <p>
+                    The book will be matched by the title with the clippings you loaded and the highlights will be shown
+                    including the sentence surrounding it.
+                    Be aware that you need to upload the exact book you read on your Kindle device for it to work
+                    flawlessly.
+                </p>
+                <p>
+                    If you have any suggestions or want to report a bug - and there definitely are some bugs -
+                    feel free to contact me via email&nbsp;
+                    <b>
+                        myclippingsmanager@gmail.com
+                        <CopyToClipboard value={"myclippingsmanager@gmail.com"}/>
+                    </b>
+                </p>
+                <p>Supported languages of MyClippings file: English, Japanese, Spanish and Italian</p>
             </DialogContent>
             <DialogActions>
                 <Button color={"secondary"} size={"large"} onClick={onClose}>Close</Button>

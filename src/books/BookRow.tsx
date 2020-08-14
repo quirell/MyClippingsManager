@@ -17,10 +17,12 @@ const useStyles = makeStyles({
 
 interface Props {
     title: string,
-    deleted: (title: string) => void
+    // deleted: (title: string) => void
+    // restored: (title: string) => void
+    hideDeleted: boolean
 }
 
-export default function BookRow({title, deleted}: Props) {
+export default function BookRow({title, hideDeleted}: Props) {
     const classes = useStyles();
     const {enqueueSnackbar} = useSnackbar();
     const [info, setInfo] = React
@@ -83,6 +85,10 @@ export default function BookRow({title, deleted}: Props) {
         setEditable(false);
     }
 
+    if (hideDeleted && info.clippings == 0) {
+        return <></>
+    }
+
     return (
         <TableRow>
             <TableCell component="th" scope="row">{title}</TableCell>
@@ -99,7 +105,7 @@ export default function BookRow({title, deleted}: Props) {
             <TableCell align="right">
                 {
                     !editable &&
-                    <IconButton size={"small"} onClick={() => setEditable(true)} >
+                    <IconButton size={"small"} onClick={() => setEditable(true)}>
                         <Icon className={clsx("fas fa-edit")}/>
                     </IconButton>
                 }
